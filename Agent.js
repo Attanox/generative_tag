@@ -33,9 +33,12 @@ class Agent {
     // this.vel.y += 0.1;
 
     // moving means adding velocity to position
-    this.vel.add(acc);
     this.pos.add(this.vel);
 
+    this.checkBoundaries();
+  }
+
+  checkBoundaries() {
     // if Agent hits border of canvas make it bounce
     if (this.pos.x < this.radius) {
       this.pos.x = this.radius;
@@ -55,8 +58,11 @@ class Agent {
     }
   }
 
-  setPosition(pos) {
-    this.pos = pos;
+  setPosition(x, y) {
+    this.pos.x = this.pos.x + x;
+    this.pos.y = this.pos.y - y;
+
+    this.checkBoundaries();
   }
 
   render() {

@@ -21,9 +21,6 @@ function setup() {
     );
   }
 
-  // default values
-  xpos = 200;
-  ypos = 200;
   x = 0;
   y = 0;
 }
@@ -50,7 +47,8 @@ function draw() {
   // }
 
   for (let i = 0; i < agents.length; i++) {
-    agents[i].move(createVector(x, y));
+    agents[i].setPosition(x, y);
+    agents[i].move();
     agents[i].render();
   }
 }
