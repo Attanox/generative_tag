@@ -1,9 +1,25 @@
 var x, y, z;
 var xpos, ypos;
 
+const RADIUS = 15;
+const PLAYERS_NUM = 1;
+
+let agents = [];
+
 function setup() {
   // set canvas size
   createCanvas(400, 400);
+
+  for (i = 0; i < PLAYERS_NUM; i++) {
+    agents.push(
+      new Agent(
+        createVector(random(width), random(height)),
+        p5.Vector.random2D().mult(random(10)),
+        RADIUS,
+        color(random(255), random(255), random(255))
+      )
+    );
+  }
 
   // default values
   xpos = 200;
@@ -14,41 +30,42 @@ function setup() {
 
 function draw() {
   // set background color to white
-  background(255);
-
-  // add/subract xpos and ypos
-  xpos = xpos + x;
-  ypos = ypos - y;
-
-  // wrap ellipse if over bounds
-  if (xpos > 400) {
-    xpos = 0;
-  }
-  if (xpos < 0) {
-    xpos = 400;
-  }
-  if (ypos > 400) {
-    ypos = 0;
-  }
-  if (ypos < 0) {
-    ypos = 400;
-  }
+  background(30);
 
   // draw ellipse
-  fill(255, 0, 0);
-  ellipse(xpos, ypos, 25, 25);
+  noStroke();
+  fill(255, 100, 100);
+  circle(xpos, ypos, RADIUS);
 
   // display variables
-  fill(0);
-  noStroke();
+  fill(255);
   text("x: " + x, 25, 25);
   text("y: " + y, 25, 50);
   text("z: " + z, 25, 75);
+
+  // for (let i = 0; i < agents.length; i++) {
+  //   for (let j = 0; j < i; j++) {
+  //     agents[i].collide(agents[j]);
+  //   }
+  // }
+
+  for (let i = 0; i < agents.length; i++) {
+    agents[i].move(createVector(x, y));
+    agents[i].render();
+  }
+}
+
+function removeBanner() {
+  var element = document.getElementById("motion-permission");
+  if (element) {
+    element.parentNode.removeChild(element);
+  }
 }
 
 function addMotionListener() {
   window.addEventListener("devicemotion", (e) => {
     // do something with e
+    // console.log({ e });
     // get accelerometer values
     x = parseInt(e.accelerationIncludingGravity.x);
     y = parseInt(e.accelerationIncludingGravity.y);
@@ -60,6 +77,7 @@ function ClickRequestDeviceMotionEvent() {
   window.DeviceMotionEvent.requestPermission()
     .then((response) => {
       if (response === "granted") {
+        removeBanner();
         addMotionListener();
       } else {
         console.log("DeviceMotion permissions not granted.");
@@ -78,8 +96,11 @@ window.onload = function () {
   ) {
     // Everything here is just a lazy banner. You can do the banner your way.
     const banner = document.createElement("div");
+    banner.setAttribute("id", "motion-permission");
     banner.innerHTML = `<div style="z-index: 1; position: absolute; width: 100%; background-color:#000; color: #fff"><p style="padding: 10px">Click here to enable DeviceMotion</p></div>`;
     banner.onclick = ClickRequestDeviceMotionEvent; // You NEED to bind the function into a onClick event. An artificial 'onClick' will NOT work.
     document.querySelector("body").appendChild(banner);
+  } else {
+    addMotionListener();
   }
 };
