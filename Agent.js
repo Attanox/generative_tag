@@ -1,10 +1,33 @@
 class Agent {
-  constructor(pos, vel, radius, color) {
-    this.pos = pos;
+  static taggedColor = `rgb(255, 100, 100)`;
+  static notTaggedColor = `rgb(100, 255, 100)`;
+
+  constructor(vel, radius, tagged) {
     this.vel = vel;
     this.radius = radius;
-    this.color = color;
+    this.tagged = tagged;
+
+    this.color = this.getColor();
+    this.setStartingPosition(tagged);
   }
+
+  getColor() {
+    if (this.tagged) {
+      return color(Agent.taggedColor);
+    } else {
+      return color(Agent.notTaggedColor);
+    }
+  }
+
+  setStartingPosition(tagged = false) {
+    const taggedPos = [random(width), random(height - height / 3, height)];
+    const notTaggedPos = [random(width), random(0, height / 3)];
+
+    const pos = tagged ? taggedPos : notTaggedPos;
+
+    this.pos = createVector(...pos);
+  }
+
   collide(other) {
     // do not collide with yourself
     if (other == this) {
@@ -25,6 +48,16 @@ class Agent {
       let approachVector = thisToOtherNormal.copy().setMag(approachSpeed);
       this.vel.sub(approachVector);
       other.vel.add(approachVector);
+
+      if (other.tagged) {
+        this.tag();
+        other.untag();
+        return;
+      }
+      if (this.tagged) {
+        other.tag();
+        this.untag();
+      }
     }
   }
 
@@ -42,23 +75,27 @@ class Agent {
     // if Agent hits border of canvas make it bounce
     if (this.pos.x < this.radius) {
       this.pos.x = this.radius;
+      // ? should it ?
       this.vel.x = -this.vel.x;
     }
     if (this.pos.x > width - this.radius) {
       this.pos.x = width - this.radius;
+      // ? should it ?
       this.vel.x = -this.vel.x;
     }
     if (this.pos.y < this.radius) {
       this.pos.y = this.radius;
+      // ? should it ?
       this.vel.y = -this.vel.y;
     }
     if (this.pos.y > height - this.radius) {
       this.pos.y = height - this.radius;
+      // ? should it ?
       this.vel.y = -this.vel.y;
     }
   }
 
-  setPosition(x, y) {
+  changePosition(x, y) {
     this.pos.x = this.pos.x + x;
     this.pos.y = this.pos.y - y;
 
@@ -66,7 +103,16 @@ class Agent {
   }
 
   render() {
-    fill(this.color);
+    const clr = this.getColor();
+    fill(clr);
     ellipse(this.pos.x, this.pos.y, this.radius * 2);
+  }
+
+  tag() {
+    this.tagged = true;
+  }
+
+  untag() {
+    this.tagged = false;
   }
 }

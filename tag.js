@@ -2,24 +2,30 @@ var x, y, z;
 var xpos, ypos;
 
 const RADIUS = 15;
-const PLAYERS_NUM = 1;
+const PLAYERS_NUM = 3;
 
 let agents = [];
+
+function getAgent(tagged = false) {
+  const agent = new Agent(
+    p5.Vector.random2D().mult(random(10)), // //createVector(0, 0)
+    RADIUS,
+
+    tagged
+  );
+
+  return agent;
+}
 
 function setup() {
   // set canvas size
   createCanvas(400, 400);
 
   for (i = 0; i < PLAYERS_NUM; i++) {
-    agents.push(
-      new Agent(
-        createVector(random(width), random(height)),
-        p5.Vector.random2D().mult(random(10)),
-        RADIUS,
-        color(random(255), random(255), random(255))
-      )
-    );
+    agents.push(getAgent());
   }
+
+  agents.push(getAgent(true));
 
   x = 0;
   y = 0;
@@ -40,17 +46,18 @@ function draw() {
   text("y: " + y, 25, 50);
   text("z: " + z, 25, 75);
 
-  // for (let i = 0; i < agents.length; i++) {
-  //   for (let j = 0; j < i; j++) {
-  //     agents[i].collide(agents[j]);
-  //   }
-  // }
+  for (let i = 0; i < agents.length; i++) {
+    for (let j = 0; j < i; j++) {
+      agents[i].collide(agents[j]);
+    }
+  }
 
   for (let i = 0; i < agents.length; i++) {
-    agents[i].setPosition(x, y);
     agents[i].move();
     agents[i].render();
   }
+  // * you as agent
+  agents[agents.length - 1].changePosition(x, y);
 }
 
 function removeBanner() {
