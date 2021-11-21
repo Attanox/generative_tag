@@ -7,7 +7,7 @@ class Agent {
 
   static imuneAmount = 50;
 
-  constructor(vel, radius, tagged, alive) {
+  constructor(vel, radius, tagged = false, alive = false, obsticles = []) {
     this.vel = vel;
     this.radius = radius;
     this.tagged = tagged;
@@ -17,6 +17,8 @@ class Agent {
     this.pos = this.getStartingPosition(tagged);
 
     this.imune = 0;
+
+    this.obsticles = obsticles;
   }
 
   getColor() {
@@ -88,21 +90,25 @@ class Agent {
       this.pos.x = this.radius;
       // ? should it ?
       this.vel.x = -this.vel.x;
+      return;
     }
     if (this.pos.x > width - this.radius) {
       this.pos.x = width - this.radius;
       // ? should it ?
       this.vel.x = -this.vel.x;
+      return;
     }
     if (this.pos.y < this.radius) {
       this.pos.y = this.radius;
       // ? should it ?
       this.vel.y = -this.vel.y;
+      return;
     }
     if (this.pos.y > height - this.radius) {
       this.pos.y = height - this.radius;
       // ? should it ?
       this.vel.y = -this.vel.y;
+      return;
     }
   }
 
@@ -172,6 +178,10 @@ class Agent {
     if (closestTarget) {
       this.arrive(closestTarget);
     }
+  }
+
+  isPlayer() {
+    return this.alive;
   }
 
   render() {

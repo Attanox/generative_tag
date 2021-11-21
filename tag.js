@@ -6,28 +6,39 @@ const PLAYERS_NUM = 5;
 
 let agents = [];
 
+let obsticles = [];
+
 function getAgent(tagged = false, alive = false) {
   const agent = new Agent(
     createVector(0, 0), //p5.Vector.random2D().mult(random(10)) //
     RADIUS,
     tagged,
-    alive
+    alive,
+    obsticles
   );
 
   return agent;
 }
 
 function setup() {
-  // set canvas size
-  // createCanvas(400, 400);
-  createCanvas(displayWidth, displayHeight);
+  // * set canvas size
+  // createCanvas(500, 500);
+  createCanvas(displayWidth, displayHeight - 100);
 
+  // * set up obsticles
+  for (let k = 0; k < PLAYERS_NUM; k++) {
+    obsticles.push(new Obsticle());
+  }
+
+  // * create agents
   for (i = 0; i < PLAYERS_NUM; i++) {
     agents.push(getAgent());
   }
 
+  // * push player as agent
   agents.push(getAgent(true, true));
 
+  // * initial device motion coords
   x = 0;
   y = 0;
 }
@@ -49,6 +60,8 @@ function draw() {
   text("y: " + y, 25, 50);
   text("z: " + z, 25, 75);
 
+  obsticles.forEach((o) => o.render());
+
   for (let i = 0; i < agents.length; i++) {
     for (let j = 0; j < i; j++) {
       agents[i].collide(agents[j]);
@@ -58,10 +71,12 @@ function draw() {
   const taggedAgent = agents.find((agent) => agent.tagged);
 
   for (let i = 0; i < agents.length; i++) {
-    if (!agents[i].tagged) {
-      agents[i].flee(taggedAgent);
-    } else {
-      agents[i].hunt(agentsWithoutHunter(i));
+    if (!agents[i].isPlayer()) {
+      if (!agents[i].tagged) {
+        agents[i].flee(taggedAgent);
+      } else {
+        agents[i].hunt(agentsWithoutHunter(i));
+      }
     }
 
     agents[i].move();
@@ -69,7 +84,7 @@ function draw() {
   }
 
   // * player as agent
-  agents[agents.length - 1].changePosition(x, y);
+  agents[agents.length - 1].moveToPosition(x, y);
 }
 
 function removeBanner() {
