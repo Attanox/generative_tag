@@ -20,7 +20,7 @@ function getAgent(tagged = false, alive = false) {
 function setup() {
   // set canvas size
   // createCanvas(400, 400);
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(displayWidth, displayHeight);
 
   for (i = 0; i < PLAYERS_NUM; i++) {
     agents.push(getAgent());
@@ -69,7 +69,7 @@ function draw() {
   }
 
   // * player as agent
-  agents[agents.length - 1].moveToPosition(x, y);
+  agents[agents.length - 1].changePosition(x, y);
 }
 
 function removeBanner() {
