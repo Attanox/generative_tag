@@ -2,16 +2,16 @@ var x, y, z;
 var xpos, ypos;
 
 const RADIUS = 15;
-const PLAYERS_NUM = 3;
+const PLAYERS_NUM = 5;
 
 let agents = [];
 
-function getAgent(tagged = false) {
+function getAgent(tagged = false, alive = false) {
   const agent = new Agent(
-    p5.Vector.random2D().mult(random(10)), // //createVector(0, 0)
+    createVector(0, 0), //p5.Vector.random2D().mult(random(10)) //
     RADIUS,
-
-    tagged
+    tagged,
+    alive
   );
 
   return agent;
@@ -19,16 +19,21 @@ function getAgent(tagged = false) {
 
 function setup() {
   // set canvas size
-  createCanvas(400, 400);
+  // createCanvas(400, 400);
+  createCanvas(windowWidth, windowHeight);
 
   for (i = 0; i < PLAYERS_NUM; i++) {
     agents.push(getAgent());
   }
 
-  agents.push(getAgent(true));
+  agents.push(getAgent(true, true));
 
   x = 0;
   y = 0;
+}
+
+function agentsWithoutHunter(idx) {
+  return [...agents.slice(0, idx), ...agents.slice(idx + 1)];
 }
 
 function draw() {
@@ -37,8 +42,6 @@ function draw() {
 
   // draw ellipse
   noStroke();
-  fill(255, 100, 100);
-  circle(xpos, ypos, RADIUS);
 
   // display variables
   fill(255);
@@ -52,12 +55,21 @@ function draw() {
     }
   }
 
+  const taggedAgent = agents.find((agent) => agent.tagged);
+
   for (let i = 0; i < agents.length; i++) {
+    if (!agents[i].tagged) {
+      agents[i].flee(taggedAgent);
+    } else {
+      agents[i].hunt(agentsWithoutHunter(i));
+    }
+
     agents[i].move();
     agents[i].render();
   }
-  // * you as agent
-  agents[agents.length - 1].changePosition(x, y);
+
+  // * player as agent
+  agents[agents.length - 1].moveToPosition(x, y);
 }
 
 function removeBanner() {
@@ -65,6 +77,11 @@ function removeBanner() {
   if (element) {
     element.parentNode.removeChild(element);
   }
+}
+
+function mouseMoved() {
+  x = mouseX;
+  y = mouseY;
 }
 
 function addMotionListener() {

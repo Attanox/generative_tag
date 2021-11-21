@@ -2,13 +2,21 @@ class Agent {
   static taggedColor = `rgb(255, 100, 100)`;
   static notTaggedColor = `rgb(100, 255, 100)`;
 
-  constructor(vel, radius, tagged) {
+  static maxSpeed = 100;
+  static maxForce = 5;
+
+  static imuneAmount = 50;
+
+  constructor(vel, radius, tagged, alive) {
     this.vel = vel;
     this.radius = radius;
     this.tagged = tagged;
+    this.alive = alive;
 
     this.color = this.getColor();
-    this.setStartingPosition(tagged);
+    this.pos = this.getStartingPosition(tagged);
+
+    this.imune = 0;
   }
 
   getColor() {
@@ -19,13 +27,13 @@ class Agent {
     }
   }
 
-  setStartingPosition(tagged = false) {
+  getStartingPosition(tagged = false) {
     const taggedPos = [random(width), random(height - height / 3, height)];
     const notTaggedPos = [random(width), random(0, height / 3)];
 
     const pos = tagged ? taggedPos : notTaggedPos;
 
-    this.pos = createVector(...pos);
+    return createVector(...pos);
   }
 
   collide(other) {
@@ -49,26 +57,29 @@ class Agent {
       this.vel.sub(approachVector);
       other.vel.add(approachVector);
 
-      if (other.tagged) {
+      if (other.tagged && !this.isImune()) {
         this.tag();
         other.untag();
         return;
       }
-      if (this.tagged) {
+      if (this.tagged && !other.isImune()) {
         other.tag();
         this.untag();
       }
     }
   }
 
-  move(acc) {
-    // gravity
-    // this.vel.y += 0.1;
+  isImune() {
+    return this.imune > 0;
+  }
 
+  move() {
     // moving means adding velocity to position
     this.pos.add(this.vel);
 
     this.checkBoundaries();
+
+    if (this.imune) this.imune--;
   }
 
   checkBoundaries() {
@@ -102,9 +113,79 @@ class Agent {
     this.checkBoundaries();
   }
 
+  moveToPosition(x, y) {
+    this.pos = createVector(x, y);
+
+    this.checkBoundaries();
+  }
+
+  flee(taggedAgent) {
+    let desired = p5.Vector.sub(taggedAgent.pos, this.pos);
+    let d = desired.mag();
+    if (d < 150) {
+      desired.setMag(Agent.maxSpeed * 2);
+      desired.mult(-1);
+      let steer = p5.Vector.sub(desired, this.vel);
+      steer.limit(Agent.maxForce * 2);
+      this.vel = steer;
+    } else {
+      this.vel = createVector(0, 0);
+    }
+  }
+
+  arrive(target) {
+    let desired = p5.Vector.sub(target, this.pos);
+    let d = desired.mag();
+    let speed = Agent.maxSpeed;
+    if (d < 100) {
+      speed = map(d, 0, 100, 0, Agent.maxSpeed);
+    }
+    desired.setMag(speed);
+    let steer = p5.Vector.sub(desired, this.vel);
+    steer.limit(Agent.maxForce);
+    this.vel = steer;
+  }
+
+  hunt(hunted) {
+    // * looking for the closest agent
+    let closestTarget;
+    hunted.forEach((h) => {
+      if (closestTarget) {
+        let d = dist(this.pos.x, this.pos.y, h.pos.x, h.pos.y);
+        let closestDist = dist(
+          this.pos.x,
+          this.pos.y,
+          closestTarget.x,
+          closestTarget.y
+        );
+        if (d < closestDist && !h.isImune()) {
+          closestTarget = h.pos;
+        }
+      } else {
+        // * first iteration does not have anything
+        if (!h.isImune()) {
+          closestTarget = h.pos;
+        }
+      }
+    });
+
+    if (closestTarget) {
+      this.arrive(closestTarget);
+    }
+  }
+
   render() {
-    const clr = this.getColor();
-    fill(clr);
+    this.color = this.getColor();
+    fill(this.color);
+    if (this.alive) {
+      strokeWeight(3);
+      stroke(100, 100, 250);
+    }
+    // * for distinguishing imune agents
+    // if (this.isImune()) {
+    //   strokeWeight(3);
+    //   stroke(250, 250, 250);
+    // }
     ellipse(this.pos.x, this.pos.y, this.radius * 2);
   }
 
@@ -113,6 +194,7 @@ class Agent {
   }
 
   untag() {
+    this.imune = Agent.imuneAmount;
     this.tagged = false;
   }
 }
