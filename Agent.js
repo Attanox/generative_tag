@@ -114,8 +114,8 @@ class Agent {
 
   changePosition(x, y) {
     if (this.isPlayer()) {
-      this.pos.x = this.pos.x - x * 2;
-      this.pos.y = this.pos.y + y * 2;
+      this.pos.x = this.pos.x + x;
+      this.pos.y = this.pos.y - y;
 
       this.checkBoundaries();
     }
