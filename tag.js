@@ -1,16 +1,17 @@
-var x, y, z;
-var xpos, ypos;
-
 const RADIUS = 15;
 const PLAYERS_NUM = 5;
+const CANVAS_HEIGHT = 500;
+
+let x, y;
+let xpos, ypos;
 
 let agents = [];
-
 let obsticles = [];
+let useMouse = false;
 
 function getAgent(tagged = false, alive = false) {
   const agent = new Agent(
-    createVector(0, 0), //p5.Vector.random2D().mult(random(10)) //
+    p5.Vector.random2D().mult(random(10)), // //createVector(0, 0)
     RADIUS,
     tagged,
     alive,
@@ -20,10 +21,15 @@ function getAgent(tagged = false, alive = false) {
   return agent;
 }
 
+function addPlayer() {
+  // * push player as agent
+  agents.push(getAgent(false, true));
+}
+
 function setup() {
   // * set canvas size
-  // createCanvas(500, 500);
-  createCanvas(displayWidth, displayHeight - 100);
+  createCanvas(displayWidth, CANVAS_HEIGHT);
+  // createCanvas(displayWidth, displayHeight - 100);
 
   // * set up obsticles
   for (let k = 0; k < PLAYERS_NUM; k++) {
@@ -34,9 +40,15 @@ function setup() {
   for (i = 0; i < PLAYERS_NUM; i++) {
     agents.push(getAgent());
   }
+  agents.push(getAgent(true));
 
-  // * push player as agent
-  agents.push(getAgent(true, true));
+  addPlayerBtn = createButton("add player");
+  addPlayerBtn.position(0, CANVAS_HEIGHT);
+  addPlayerBtn.mousePressed(addPlayer);
+
+  useMouseBtn = createButton("use mouse");
+  useMouseBtn.position(100, CANVAS_HEIGHT);
+  useMouseBtn.mousePressed(() => (useMouse = true));
 
   // * initial device motion coords
   x = 0;
@@ -58,7 +70,6 @@ function draw() {
   fill(255);
   text("x: " + x, 25, 25);
   text("y: " + y, 25, 50);
-  text("z: " + z, 25, 75);
 
   obsticles.forEach((o) => o.render());
 
@@ -79,6 +90,8 @@ function draw() {
       }
     }
 
+    agents[i].resolveRectCircleCollision(obsticles);
+
     agents[i].move();
     agents[i].render();
   }
@@ -95,18 +108,18 @@ function removeBanner() {
 }
 
 function mouseMoved() {
-  x = mouseX;
-  y = mouseY;
+  if (useMouse) {
+    x = mouseX;
+    y = mouseY;
+  }
 }
 
 function addMotionListener() {
   window.addEventListener("devicemotion", (e) => {
-    // do something with e
     // console.log({ e });
-    // get accelerometer values
+    // * get accelerometer values
     x = parseInt(e.accelerationIncludingGravity.x);
     y = parseInt(e.accelerationIncludingGravity.y);
-    z = parseInt(e.accelerationIncludingGravity.z);
   });
 }
 

@@ -113,16 +113,33 @@ class Agent {
   }
 
   changePosition(x, y) {
-    this.pos.x = this.pos.x + x;
-    this.pos.y = this.pos.y - y;
+    if (this.isPlayer()) {
+      this.pos.x = this.pos.x + x;
+      this.pos.y = this.pos.y - y;
 
-    this.checkBoundaries();
+      this.checkBoundaries();
+    }
   }
 
   moveToPosition(x, y) {
-    this.pos = createVector(x, y);
+    if (this.isPlayer()) {
+      this.pos = createVector(x, y);
 
-    this.checkBoundaries();
+      this.checkBoundaries();
+    }
+  }
+
+  isPlayer() {
+    return this.alive;
+  }
+
+  tag() {
+    this.tagged = true;
+  }
+
+  untag() {
+    this.imune = Agent.imuneAmount;
+    this.tagged = false;
   }
 
   flee(taggedAgent) {
@@ -135,8 +152,10 @@ class Agent {
       steer.limit(Agent.maxForce * 2);
       this.vel = steer;
     } else {
-      this.vel = createVector(0, 0);
+      this.vel = p5.Vector.random2D().mult(random(10)); // createVector(0, 0);
     }
+
+    this.checkBoundaries();
   }
 
   arrive(target) {
@@ -180,8 +199,52 @@ class Agent {
     }
   }
 
-  isPlayer() {
-    return this.alive;
+  // taken from https://stackoverflow.com/questions/55419162/corner-collision-angles-in-p5-js
+  resolveRectCircleCollision(obsticles) {
+    obsticles.forEach((obsticle) => {
+      let hx = 0.5 * obsticle.w;
+      let hy = 0.5 * obsticle.h;
+      let rx = obsticle.x + hx;
+      let ry = obsticle.y + hy;
+      let dx = this.pos.x - rx;
+      let dy = this.pos.y - ry;
+
+      let sx = dx < -hx ? -1 : dx > hx ? 1 : 0;
+      let sy = dy < -hy ? -1 : dy > hy ? 1 : 0;
+
+      let tx = sx * (Math.abs(dx) - hx);
+      let ty = sy * (Math.abs(dy) - hy);
+      let dc = Math.hypot(tx, ty);
+      if (dc > this.radius) return false;
+
+      let nx = 0;
+      let ny = 0;
+      let nl = 0;
+
+      if (sx == 0 && sy == 0) {
+        nx = dx > 0 ? 1 : -1;
+        ny = dy > 0 ? 1 : -1;
+
+        nl = Math.hypot(nx, ny);
+      } else {
+        nx = tx;
+        ny = ty;
+        nl = dc;
+      }
+      nx /= nl;
+      ny /= nl;
+
+      this.pos.x += (this.radius - dc) * nx;
+      this.pos.y += (this.radius - dc) * ny;
+
+      let dv = this.vel.x * nx + this.vel.y * ny;
+      if (dv >= 0.0) return false;
+
+      this.vel.x -= 2.0 * dv * nx;
+      this.vel.y -= 2.0 * dv * ny;
+
+      return true;
+    });
   }
 
   render() {
@@ -197,14 +260,5 @@ class Agent {
     //   stroke(250, 250, 250);
     // }
     ellipse(this.pos.x, this.pos.y, this.radius * 2);
-  }
-
-  tag() {
-    this.tagged = true;
-  }
-
-  untag() {
-    this.imune = Agent.imuneAmount;
-    this.tagged = false;
   }
 }

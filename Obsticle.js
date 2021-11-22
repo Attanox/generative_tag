@@ -14,7 +14,7 @@ class Obsticle {
   }
 
   render() {
-    fill(255, 10);
+    fill(255);
 
     rect(...this.pos);
   }
