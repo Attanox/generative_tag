@@ -50,6 +50,10 @@ function setup() {
   useMouseBtn.position(100, CANVAS_HEIGHT);
   useMouseBtn.mousePressed(() => (useMouse = true));
 
+  useMouseBtn = createButton("add agent");
+  useMouseBtn.position(200, CANVAS_HEIGHT);
+  useMouseBtn.mousePressed(() => agents.push(getAgent()));
+
   // * initial device motion coords
   x = 0;
   y = 0;
@@ -98,9 +102,9 @@ function draw() {
 
   // * player as agent
   if (useMouse) {
-    agents[agents.length - 1].moveToPosition(x, y);
+    agents.filter((a) => a.isPlayer()).forEach((a) => a.moveToPosition(x, y));
   } else {
-    agents[agents.length - 1].changePosition(x, y);
+    agents.filter((a) => a.isPlayer()).forEach((a) => a.changePosition(x, y));
   }
 }
 
