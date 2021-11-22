@@ -97,7 +97,11 @@ function draw() {
   }
 
   // * player as agent
-  agents[agents.length - 1].moveToPosition(x, y);
+  if (useMouse) {
+    agents[agents.length - 1].moveToPosition(x, y);
+  } else {
+    agents[agents.length - 1].changePosition(x, y);
+  }
 }
 
 function removeBanner() {
