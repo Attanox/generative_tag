@@ -1,5 +1,6 @@
 const RADIUS = 15;
-const PLAYERS_NUM = 5;
+const PLAYERS_NUM = 55;
+const OBSTICLES_NUM = 5;
 const CANVAS_HEIGHT = 500;
 
 let x, y;
@@ -32,7 +33,7 @@ function setup() {
   // createCanvas(displayWidth, displayHeight - 100);
 
   // * set up obsticles
-  for (let k = 0; k < PLAYERS_NUM; k++) {
+  for (let k = 0; k < OBSTICLES_NUM; k++) {
     obsticles.push(new Obsticle());
   }
 

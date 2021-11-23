@@ -114,8 +114,8 @@ class Agent {
 
   changePosition(x, y) {
     if (this.isPlayer()) {
-      this.pos.x = this.pos.x + x;
-      this.pos.y = this.pos.y - y;
+      this.pos.x = this.pos.x - x * 5;
+      this.pos.y = this.pos.y + y * 5;
 
       this.checkBoundaries();
     }
@@ -260,5 +260,6 @@ class Agent {
     //   stroke(250, 250, 250);
     // }
     ellipse(this.pos.x, this.pos.y, this.radius * 2);
+    noStroke();
   }
 }
