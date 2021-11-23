@@ -1,5 +1,5 @@
 const RADIUS = 15;
-const PLAYERS_NUM = 55;
+const PLAYERS_NUM = 0;
 const OBSTICLES_NUM = 5;
 const CANVAS_HEIGHT = 500;
 
@@ -41,7 +41,7 @@ function setup() {
   for (i = 0; i < PLAYERS_NUM; i++) {
     agents.push(getAgent());
   }
-  agents.push(getAgent(true));
+  // agents.push(getAgent(true));
 
   addPlayerBtn = createButton("add player");
   addPlayerBtn.position(0, CANVAS_HEIGHT);
