@@ -56,8 +56,8 @@ class Agent {
       let approachSpeed =
         this.vel.dot(thisToOtherNormal) + -other.vel.dot(thisToOtherNormal);
       let approachVector = thisToOtherNormal.copy().setMag(approachSpeed);
-      this.vel.sub(approachVector);
-      other.vel.add(approachVector);
+      if (!this.isPlayer()) this.vel.sub(approachVector);
+      if (!other.isPlayer()) other.vel.add(approachVector);
 
       if (other.tagged && !this.isImune()) {
         this.tag();
@@ -142,6 +142,7 @@ class Agent {
     this.tagged = false;
   }
 
+  // taken from https://www.youtube.com/watch?v=4hA7G3gup-4&list=PLLHSiGX_Xw7GPGdb5GZZGYlQsYPg71N3n
   flee(taggedAgent) {
     let desired = p5.Vector.sub(taggedAgent.pos, this.pos);
     let d = desired.mag();
@@ -158,6 +159,7 @@ class Agent {
     this.checkBoundaries();
   }
 
+  // taken from https://www.youtube.com/watch?v=4hA7G3gup-4&list=PLLHSiGX_Xw7GPGdb5GZZGYlQsYPg71N3n
   arrive(target) {
     let desired = p5.Vector.sub(target, this.pos);
     let d = desired.mag();
