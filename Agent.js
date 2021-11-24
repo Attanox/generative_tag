@@ -44,20 +44,16 @@ class Agent {
       return;
     }
 
+    // find out if two agents are close
     let relative = p5.Vector.sub(other.pos, this.pos);
     let dist = relative.mag() - (this.radius + other.radius);
 
+    // if agents are too close
     if (dist < 0) {
+      // send them opposite ways
       let movement = relative.copy().setMag(abs(dist / 2));
       this.pos.sub(movement);
       other.pos.add(movement);
-
-      let thisToOtherNormal = relative.copy().normalize();
-      let approachSpeed =
-        this.vel.dot(thisToOtherNormal) + -other.vel.dot(thisToOtherNormal);
-      let approachVector = thisToOtherNormal.copy().setMag(approachSpeed);
-      if (!this.isPlayer()) this.vel.sub(approachVector);
-      if (!other.isPlayer()) other.vel.add(approachVector);
 
       if (other.tagged && !this.isImune()) {
         this.tag();
