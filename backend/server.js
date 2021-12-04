@@ -16,8 +16,6 @@ io.on("connection", (client) => {
   // * once client connects join them to game
   client.on("joinGame", handleJoinGame);
   client.on("addAgent", handleAddAgent);
-  // TODO: moving agents
-  // client.on('moveAgent', handleMoveAgent);
   client.on("movePlayer", handleMovePlayer);
 
   function handleJoinGame({ roomName: room, player }) {
@@ -60,29 +58,6 @@ io.on("connection", (client) => {
         },
       },
     };
-  }
-
-  /**
-   *
-   * @param {vel: {x, y}, pos: {x, y}, radius} payload
-   */
-  function handleAddAgent(payload) {
-    console.log("adding agent to state 🦈");
-    console.log({ payload });
-    const id = uuidv4();
-
-    const agentProps = {
-      id,
-      tagged: isTagged(),
-      alive: false,
-      ...payload,
-    };
-
-    // * client is adding new agent
-    addAgent(id, agentProps);
-
-    // * emit to all clients to add new agent
-    client.emit("displayAgent", agentProps);
   }
 
   function startGameInterval(roomName) {

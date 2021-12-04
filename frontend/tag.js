@@ -11,8 +11,6 @@ let playerID = "";
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("changePlayerPosition", handleChangePlayerPosition);
-// socket.on("displayAgent", handleDisplayAgent);
-// socket.on("changeAgentPosition", handleChangeAgentPosition);
 socket.on("gameState", handleGameState);
 
 function setup() {
@@ -24,9 +22,6 @@ function setup() {
     roomName: null,
     player: { ...getAddAgentPayload() },
   });
-  // let addAgentBtn = createButton("Add agent");
-  // addAgentBtn.position(50, CANVAS_HEIGHT);
-  // addAgentBtn.mousePressed(callAddAgent);
 
   // * initial device motion coords
   x = 0;
@@ -70,13 +65,6 @@ function getAddAgentPayload() {
   };
 }
 
-// function callAddAgent() {
-//   const payload = {
-//     ...getAddAgentPayload(),
-//   };
-//   socket.emit("addAgent", payload);
-// }
-
 function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
   const agent = new Agent(id, pos, vel, radius, tagged, alive, obsticles);
   agents.push(agent);
@@ -87,10 +75,6 @@ function handleDisplayPlayer(data) {
   playerID = data.id;
   addNewAgent(data);
 }
-// function handleDisplayAgent(data) {
-//   console.log("adding agent 🤖");
-//   addNewAgent(data);
-// }
 
 function handleChangePlayerPosition({ id, pos, vel }) {
   const foundAgent = agents.find((a) => a.id === id);
