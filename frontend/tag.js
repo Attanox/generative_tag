@@ -53,8 +53,11 @@ function draw() {
     agents[i].resolveRectCircleCollision(obsticles);
 
     agents[i].move();
-    agents[i].render();
+    agents[i].render(playerID);
   }
+
+  // TODO: emit new state
+  // ? create all agents on BE and use functions here ?
 }
 
 function getAddAgentPayload() {
@@ -71,7 +74,6 @@ function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
 }
 
 function handleDisplayPlayer(data) {
-  console.log("adding player 🐺");
   playerID = data.id;
   addNewAgent(data);
 }
@@ -88,10 +90,11 @@ function handleChangePlayerPosition({ id, pos, vel }) {
 function handleGameState(unparsedGameState) {
   const parsedGameState = JSON.parse(unparsedGameState);
 
-  agents = [];
-
   Object.keys(parsedGameState.agents).forEach((id) => {
-    addNewAgent({ id, ...parsedGameState.agents[id], obsticles });
+    const agenttFromBEisOnFE = agents.some((a) => a.id === id);
+    if (!agenttFromBEisOnFE) {
+      addNewAgent({ id, ...parsedGameState.agents[id], obsticles });
+    }
   });
   // TODO:
   // obsticles = parsedGameState.obsticles;
@@ -104,8 +107,6 @@ function addMotionListener() {
     x = parseInt(e.accelerationIncludingGravity.x);
     y = parseInt(e.accelerationIncludingGravity.y);
     const currentPlayer = agents.find((a) => `${a.id}` === `${playerID}`);
-
-    console.log({ agents, currentPlayer, playerID });
 
     if (currentPlayer) {
       currentPlayer.changePosition(x, y);

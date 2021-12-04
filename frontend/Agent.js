@@ -106,25 +106,21 @@ class Agent {
     // if Agent hits border of canvas make it bounce
     if (this.pos.x < this.radius) {
       this.pos.x = this.radius;
-      // ? should it ?
       this.vel.x = -this.vel.x;
       return;
     }
     if (this.pos.x > width - this.radius) {
       this.pos.x = width - this.radius;
-      // ? should it ?
       this.vel.x = -this.vel.x;
       return;
     }
     if (this.pos.y < this.radius) {
       this.pos.y = this.radius;
-      // ? should it ?
       this.vel.y = -this.vel.y;
       return;
     }
     if (this.pos.y > height - this.radius) {
       this.pos.y = height - this.radius;
-      // ? should it ?
       this.vel.y = -this.vel.y;
       return;
     }
@@ -267,10 +263,10 @@ class Agent {
     });
   }
 
-  render() {
+  render(id) {
     this.color = this.getColor();
     fill(this.color);
-    if (this.alive) {
+    if (this.id === id) {
       strokeWeight(3);
       stroke(100, 100, 250);
     }

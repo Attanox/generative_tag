@@ -1,7 +1,7 @@
 const { initGame } = require("./game");
+const { FRAME_RATE } = require("./constants");
 
 const { v4: uuidv4 } = require("uuid");
-const { FRAME_RATE } = require("./constants");
 const io = require("socket.io")();
 
 const state = {};
@@ -15,7 +15,6 @@ state[roomName] = initGame();
 io.on("connection", (client) => {
   // * once client connects join them to game
   client.on("joinGame", handleJoinGame);
-  client.on("addAgent", handleAddAgent);
   client.on("movePlayer", handleMovePlayer);
 
   function handleJoinGame({ roomName: room, player }) {
@@ -80,7 +79,7 @@ function handleMovePlayer({ id, pos, vel }) {
     },
   };
 
-  io.sockets.in(room).emit("changePlayerPosition", { id, pos, vel });
+  io.sockets.in(roomName).emit("changePlayerPosition", { id, pos, vel });
 }
 
 function emitGameState(room, gameState) {
