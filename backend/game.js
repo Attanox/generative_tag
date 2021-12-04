@@ -10,6 +10,6 @@ function initGame() {
 function createGameState() {
   return {
     agents: {},
-    obstacles: [],
+    obsticles: [],
   };
 }

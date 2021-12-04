@@ -16,6 +16,8 @@ class Agent {
     alive = false,
     obsticles = []
   ) {
+    this.id = id;
+
     this.radius = radius;
     this.tagged = tagged;
     this.alive = alive;
@@ -27,6 +29,14 @@ class Agent {
     this.imune = 0;
 
     this.obsticles = obsticles;
+  }
+
+  changeVel(vel) {
+    this.vel = createVector(vel.x, vel.y);
+  }
+
+  changePos(pos) {
+    this.pos = createVector(pos.x, pos.y);
   }
 
   getColor() {

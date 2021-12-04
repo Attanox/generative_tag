@@ -1,6 +1,7 @@
 const { initGame } = require("./game");
 
 const { v4: uuidv4 } = require("uuid");
+const { FRAME_RATE } = require("./constants");
 const io = require("socket.io")();
 
 const state = {};
@@ -15,8 +16,11 @@ io.on("connection", (client) => {
   // * once client connects join them to game
   client.on("joinGame", handleJoinGame);
   client.on("addAgent", handleAddAgent);
+  // TODO: moving agents
+  // client.on('moveAgent', handleMoveAgent);
+  client.on("movePlayer", handleMovePlayer);
 
-  function handleJoinGame({ roomName, player }) {
+  function handleJoinGame({ roomName: room, player }) {
     const id = uuidv4();
 
     clientRoomMap[id] = roomName;
@@ -24,16 +28,17 @@ io.on("connection", (client) => {
     client.join(roomName);
     client.id = id;
 
-    client.emit("displayPlayer", {
+    const playerProps = {
       id,
       tagged: isTagged(),
       alive: true,
       ...player,
-    });
+    };
 
-    client.emit("init", "Hello from server 👋");
+    addAgent(id, playerProps);
+    io.sockets.in(roomName).emit("displayPlayer", playerProps);
 
-    // startGameInterval(roomName);
+    startGameInterval(roomName);
   }
 
   function someAgents() {
@@ -45,16 +50,7 @@ io.on("connection", (client) => {
     return someAgents() ? false : true;
   }
 
-  /**
-   *
-   * @param {vel: {x, y}, pos: {x, y}, radius} payload
-   */
-  function handleAddAgent(payload) {
-    console.log("adding agent to state 🦈");
-    console.log({ payload });
-    const id = uuidv4();
-
-    // * client is adding new agent
+  function addAgent(id, payload) {
     state[roomName] = {
       ...state[roomName],
       agents: {
@@ -64,16 +60,58 @@ io.on("connection", (client) => {
         },
       },
     };
+  }
 
-    // * emit to all clients to add new agent
-    client.emit("displayAgent", {
+  /**
+   *
+   * @param {vel: {x, y}, pos: {x, y}, radius} payload
+   */
+  function handleAddAgent(payload) {
+    console.log("adding agent to state 🦈");
+    console.log({ payload });
+    const id = uuidv4();
+
+    const agentProps = {
       id,
       tagged: isTagged(),
       alive: false,
       ...payload,
-    });
+    };
+
+    // * client is adding new agent
+    addAgent(id, agentProps);
+
+    // * emit to all clients to add new agent
+    client.emit("displayAgent", agentProps);
+  }
+
+  function startGameInterval(roomName) {
+    const intervalId = setInterval(() => {
+      emitGameState(roomName, state[roomName]);
+    }, 1000 / FRAME_RATE);
   }
 });
+
+function handleMovePlayer({ id, pos, vel }) {
+  state[roomName] = {
+    ...state[roomName],
+    agents: {
+      ...state[roomName].agents,
+      [id]: {
+        ...state[roomName].agents[id],
+        pos,
+        vel,
+      },
+    },
+  };
+
+  io.sockets.in(room).emit("changePlayerPosition", { id, pos, vel });
+}
+
+function emitGameState(room, gameState) {
+  // Send this event to everyone in the room.
+  io.sockets.in(room).emit("gameState", JSON.stringify(gameState));
+}
 
 // TODO: use .env
 io.listen(3000);

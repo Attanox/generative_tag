@@ -1,57 +1,45 @@
 const socket = io.connect("http://127.0.0.1:3000");
 
 const RADIUS = 15;
-const PLAYERS_NUM = 5;
-const OBSTICLES_NUM = 5;
 const CANVAS_HEIGHT = 500;
 
 let x, y;
-let xpos, ypos;
 
 let agents = [];
 let obsticles = [];
-let useMouse = false;
 let playerID = "";
 
-socket.on("init", (msg) => console.log({ msg }));
-socket.on("unknownCode", (msg) => console.log({ msg }));
 socket.on("displayPlayer", handleDisplayPlayer);
-socket.on("displayAgent", handleDisplayAgent);
+socket.on("changePlayerPosition", handleChangePlayerPosition);
+// socket.on("displayAgent", handleDisplayAgent);
+// socket.on("changeAgentPosition", handleChangeAgentPosition);
+socket.on("gameState", handleGameState);
 
 function setup() {
   // * set canvas size
   createCanvas(displayWidth, CANVAS_HEIGHT);
-  // createCanvas(displayWidth, displayHeight - 100);
 
-  // TODO: add roomName
+  // TODO: add roomName ?
   socket.emit("joinGame", {
     roomName: null,
     player: { ...getAddAgentPayload() },
   });
-
-  // * set up obsticles
-
-  // * create agents
-
-  useMouseBtn = createButton("Add agent");
-  useMouseBtn.position(50, CANVAS_HEIGHT);
-  useMouseBtn.mousePressed(callAddAgent);
+  // let addAgentBtn = createButton("Add agent");
+  // addAgentBtn.position(50, CANVAS_HEIGHT);
+  // addAgentBtn.mousePressed(callAddAgent);
 
   // * initial device motion coords
   x = 0;
   y = 0;
 }
 
-function agentsWithoutHunter(idx) {
-  return [...agents.slice(0, idx), ...agents.slice(idx + 1)];
-}
-
 function draw() {
   // set background color to white
   background(30);
-
   // draw ellipse
   noStroke();
+
+  console.log(agents);
 
   // display variables
   fill(255);
@@ -66,25 +54,12 @@ function draw() {
     }
   }
 
-  const taggedAgent = agents.find((agent) => agent.tagged);
-
   for (let i = 0; i < agents.length; i++) {
-    if (!agents[i].isPlayer() && taggedAgent) {
-      if (!agents[i].tagged) {
-        agents[i].flee(taggedAgent);
-      } else {
-        agents[i].hunt(agentsWithoutHunter(i));
-      }
-    }
-
     agents[i].resolveRectCircleCollision(obsticles);
 
     agents[i].move();
     agents[i].render();
   }
-
-  // * player as agent
-  // agents.filter((a) => a.isPlayer()).forEach((a) => a.changePosition(x, y));
 }
 
 function getAddAgentPayload() {
@@ -95,12 +70,12 @@ function getAddAgentPayload() {
   };
 }
 
-function callAddAgent() {
-  const payload = {
-    ...getAddAgentPayload(),
-  };
-  socket.emit("addAgent", payload);
-}
+// function callAddAgent() {
+//   const payload = {
+//     ...getAddAgentPayload(),
+//   };
+//   socket.emit("addAgent", payload);
+// }
 
 function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
   const agent = new Agent(id, pos, vel, radius, tagged, alive, obsticles);
@@ -108,22 +83,34 @@ function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
 }
 
 function handleDisplayPlayer(data) {
-  console.log("adding player 🐛");
+  console.log("adding player 🐺");
   playerID = data.id;
   addNewAgent(data);
 }
-function handleDisplayAgent(data) {
-  console.log("all good here 👍");
-  console.log({ data });
-  addNewAgent(data);
+// function handleDisplayAgent(data) {
+//   console.log("adding agent 🤖");
+//   addNewAgent(data);
+// }
+
+function handleChangePlayerPosition({ id, pos, vel }) {
+  const foundAgent = agents.find((a) => a.id === id);
+
+  if (foundAgent && foundAgent.id !== playerID) {
+    foundAgent.changeVel(vel);
+    foundAgent.changePos(pos);
+  }
 }
 
-// ****************************************** iOS ***************************************************************
-function removeBanner() {
-  var element = document.getElementById("motion-permission");
-  if (element) {
-    element.parentNode.removeChild(element);
-  }
+function handleGameState(unparsedGameState) {
+  const parsedGameState = JSON.parse(unparsedGameState);
+
+  agents = [];
+
+  Object.keys(parsedGameState.agents).forEach((id) => {
+    addNewAgent({ id, ...parsedGameState.agents[id], obsticles });
+  });
+  // TODO:
+  // obsticles = parsedGameState.obsticles;
 }
 
 function addMotionListener() {
@@ -132,7 +119,27 @@ function addMotionListener() {
     // * get accelerometer values
     x = parseInt(e.accelerationIncludingGravity.x);
     y = parseInt(e.accelerationIncludingGravity.y);
+    const currentPlayer = agents.find((a) => `${a.id}` === `${playerID}`);
+
+    console.log({ agents, currentPlayer, playerID });
+
+    if (currentPlayer) {
+      currentPlayer.changePosition(x, y);
+      socket.emit("movePlayer", {
+        id: playerID,
+        pos: { x: currentPlayer.pos.x, y: currentPlayer.pos.y },
+        vel: { x: currentPlayer.vel.x, y: currentPlayer.vel.y },
+      });
+    }
   });
+}
+
+// ****************************************** iOS ***************************************************************
+function removeBanner() {
+  var element = document.getElementById("motion-permission");
+  if (element) {
+    element.parentNode.removeChild(element);
+  }
 }
 
 function ClickRequestDeviceMotionEvent() {
