@@ -7,14 +7,22 @@ class Agent {
 
   static imuneAmount = 50;
 
-  constructor(vel, radius, tagged = false, alive = false, obsticles = []) {
-    this.vel = vel;
+  constructor(
+    id,
+    pos,
+    vel,
+    radius,
+    tagged = false,
+    alive = false,
+    obsticles = []
+  ) {
     this.radius = radius;
     this.tagged = tagged;
     this.alive = alive;
 
     this.color = this.getColor();
-    this.pos = this.getStartingPosition(tagged);
+    this.vel = createVector(vel.x, vel.y);
+    this.pos = createVector(pos.x, pos.y);
 
     this.imune = 0;
 
@@ -29,13 +37,17 @@ class Agent {
     }
   }
 
-  getStartingPosition(tagged = false) {
-    const taggedPos = [random(width), random(height - height / 3, height)];
-    const notTaggedPos = [random(width), random(0, height / 3)];
+  static getStartingPosition() {
+    return {
+      x: random(width),
+      y: random(height),
+    };
+  }
 
-    const pos = tagged ? taggedPos : notTaggedPos;
+  static getStartingVelocity() {
+    const p5v = p5.Vector.random2D().mult(random(10));
 
-    return createVector(...pos);
+    return { x: p5v.x, y: p5v.y };
   }
 
   collide(other) {

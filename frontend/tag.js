@@ -1,3 +1,5 @@
+const socket = io.connect("http://127.0.0.1:3000");
+
 const RADIUS = 15;
 const PLAYERS_NUM = 5;
 const OBSTICLES_NUM = 5;
@@ -9,51 +11,31 @@ let xpos, ypos;
 let agents = [];
 let obsticles = [];
 let useMouse = false;
+let playerID = "";
 
-function getAgent(tagged = false, alive = false) {
-  const agent = new Agent(
-    p5.Vector.random2D().mult(random(10)), // //createVector(0, 0)
-    RADIUS,
-    tagged,
-    alive,
-    obsticles
-  );
-
-  return agent;
-}
-
-function addPlayer() {
-  // * push player as agent
-  agents.push(getAgent(false, true));
-}
+socket.on("init", (msg) => console.log({ msg }));
+socket.on("unknownCode", (msg) => console.log({ msg }));
+socket.on("displayPlayer", handleDisplayPlayer);
+socket.on("displayAgent", handleDisplayAgent);
 
 function setup() {
   // * set canvas size
   createCanvas(displayWidth, CANVAS_HEIGHT);
   // createCanvas(displayWidth, displayHeight - 100);
 
+  // TODO: add roomName
+  socket.emit("joinGame", {
+    roomName: null,
+    player: { ...getAddAgentPayload() },
+  });
+
   // * set up obsticles
-  for (let k = 0; k < OBSTICLES_NUM; k++) {
-    obsticles.push(new Obsticle());
-  }
 
   // * create agents
-  for (i = 0; i < PLAYERS_NUM; i++) {
-    agents.push(getAgent());
-  }
-  agents.push(getAgent(true));
 
-  addPlayerBtn = createButton("add player");
-  addPlayerBtn.position(0, CANVAS_HEIGHT);
-  addPlayerBtn.mousePressed(addPlayer);
-
-  useMouseBtn = createButton("use mouse");
-  useMouseBtn.position(100, CANVAS_HEIGHT);
-  useMouseBtn.mousePressed(() => (useMouse = true));
-
-  useMouseBtn = createButton("add agent");
-  useMouseBtn.position(200, CANVAS_HEIGHT);
-  useMouseBtn.mousePressed(() => agents.push(getAgent()));
+  useMouseBtn = createButton("Add agent");
+  useMouseBtn.position(50, CANVAS_HEIGHT);
+  useMouseBtn.mousePressed(callAddAgent);
 
   // * initial device motion coords
   x = 0;
@@ -87,7 +69,7 @@ function draw() {
   const taggedAgent = agents.find((agent) => agent.tagged);
 
   for (let i = 0; i < agents.length; i++) {
-    if (!agents[i].isPlayer()) {
+    if (!agents[i].isPlayer() && taggedAgent) {
       if (!agents[i].tagged) {
         agents[i].flee(taggedAgent);
       } else {
@@ -102,24 +84,45 @@ function draw() {
   }
 
   // * player as agent
-  if (useMouse) {
-    agents.filter((a) => a.isPlayer()).forEach((a) => a.moveToPosition(x, y));
-  } else {
-    agents.filter((a) => a.isPlayer()).forEach((a) => a.changePosition(x, y));
-  }
+  // agents.filter((a) => a.isPlayer()).forEach((a) => a.changePosition(x, y));
 }
 
+function getAddAgentPayload() {
+  return {
+    pos: Agent.getStartingPosition(),
+    vel: Agent.getStartingVelocity(),
+    radius: RADIUS,
+  };
+}
+
+function callAddAgent() {
+  const payload = {
+    ...getAddAgentPayload(),
+  };
+  socket.emit("addAgent", payload);
+}
+
+function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
+  const agent = new Agent(id, pos, vel, radius, tagged, alive, obsticles);
+  agents.push(agent);
+}
+
+function handleDisplayPlayer(data) {
+  console.log("adding player 🐛");
+  playerID = data.id;
+  addNewAgent(data);
+}
+function handleDisplayAgent(data) {
+  console.log("all good here 👍");
+  console.log({ data });
+  addNewAgent(data);
+}
+
+// ****************************************** iOS ***************************************************************
 function removeBanner() {
   var element = document.getElementById("motion-permission");
   if (element) {
     element.parentNode.removeChild(element);
-  }
-}
-
-function mouseMoved() {
-  if (useMouse) {
-    x = mouseX;
-    y = mouseY;
   }
 }
 
@@ -163,3 +166,4 @@ window.onload = function () {
     addMotionListener();
   }
 };
+// ****************************************** iOS END ***************************************************************
