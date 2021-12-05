@@ -29,7 +29,7 @@ io.on("connection", (client) => {
     });
   }
 
-  function handleJoinGame({ roomName: room, player }) {
+  function handleJoinGame({ roomName: room, player, obsticles }) {
     const id = uuidv4();
 
     clientRoomMap[id] = roomName;
@@ -44,11 +44,21 @@ io.on("connection", (client) => {
       ...player,
     };
 
+    addObsticles(obsticles);
+
     addAgent(id, playerProps);
-    // // TODO: test without this
+
     client.emit("displayPlayer", playerProps);
 
     startGameInterval(roomName);
+  }
+
+  function addObsticles(obsticles) {
+    if (someAgents()) return;
+    state[roomName] = {
+      ...state[roomName],
+      obsticles,
+    };
   }
 
   function someAgents() {
@@ -96,8 +106,6 @@ io.on("connection", (client) => {
 
 function handleMovePlayer({ id, pos, vel, tagged }) {
   updateAgent(id, pos, vel, tagged);
-
-  // io.sockets.in(roomName).emit("changePlayerPosition", { id, pos, vel });
 }
 
 function emitGameState(room, gameState) {

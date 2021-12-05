@@ -91,19 +91,6 @@ class Agent {
         this.untag();
       }
     }
-
-    return {
-      [this.id]: {
-        pos: { x: this.pos.x, y: this.pos.y },
-        vel: { x: this.vel.x, y: this.vel.y },
-        tagged: this.tagged,
-      },
-      [other.id]: {
-        pos: { x: other.pos.x, y: other.pos.y },
-        vel: { x: other.vel.x, y: other.vel.y },
-        tagged: other.tagged,
-      },
-    };
   }
 
   isImune() {
