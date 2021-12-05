@@ -1,6 +1,7 @@
 const socket = io.connect("http://127.0.0.1:3000");
 
 const RADIUS = 15;
+const CANVAS_WIDTH = 320;
 const CANVAS_HEIGHT = 500;
 
 let x, y;
@@ -10,11 +11,10 @@ let obsticles = [];
 let playerID = "";
 
 socket.on("displayPlayer", handleDisplayPlayer);
-socket.on("changePlayerPosition", handleChangePlayerPosition);
 
 function setup() {
   // * set canvas size
-  createCanvas(displayWidth, CANVAS_HEIGHT);
+  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // TODO: add roomName ?
   socket.emit("joinGame", {
@@ -42,13 +42,14 @@ function draw() {
 
   obsticles.forEach((o) => o.render());
 
-  // for (let i = 0; i < agents.length; i++) {
-  //   for (let j = 0; j < i; j++) {
-  //     agents[i].collide(agents[j]);
-  //   }
-  // }
+  let agentsMvmt = {};
 
-  const agentsMvmt = {};
+  for (let i = 0; i < agents.length; i++) {
+    for (let j = 0; j < i; j++) {
+      const collisionRes = agents[i].collide(agents[j]);
+      agentsMvmt = { ...agentsMvmt, ...collisionRes };
+    }
+  }
 
   for (let i = 0; i < agents.length; i++) {
     // agents[i].resolveRectCircleCollision(obsticles);
@@ -93,6 +94,7 @@ function handleGameState(unparsedGameState) {
     } else {
       agenttFromServer.changePos(parsedGameState.agents[id].pos);
       agenttFromServer.changeVel(parsedGameState.agents[id].vel);
+      agenttFromServer.changeTagged(parsedGameState.agents[id].tagged);
     }
   });
   // TODO:
@@ -113,6 +115,7 @@ function addMotionListener() {
         id: playerID,
         pos: { x: currentPlayer.pos.x, y: currentPlayer.pos.y },
         vel: { x: currentPlayer.vel.x, y: currentPlayer.vel.y },
+        tagged: currentPlayer.tagged,
       });
     }
   });

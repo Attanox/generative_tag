@@ -20,7 +20,12 @@ io.on("connection", (client) => {
 
   function handleUpdateMvmt(data) {
     Object.keys(data).forEach((agentID) => {
-      updateAgent(agentID, data[agentID].pos, data[agentID].vel);
+      updateAgent(
+        agentID,
+        data[agentID].pos,
+        data[agentID].vel,
+        data[agentID].tagged
+      );
     });
   }
 
@@ -67,7 +72,7 @@ io.on("connection", (client) => {
     };
   }
 
-  function updateAgent(id, pos, vel) {
+  function updateAgent(id, pos, vel, tagged) {
     state[roomName] = {
       ...state[roomName],
       agents: {
@@ -76,6 +81,7 @@ io.on("connection", (client) => {
           ...state[roomName].agents[id],
           pos,
           vel,
+          tagged,
         },
       },
     };
@@ -88,8 +94,8 @@ io.on("connection", (client) => {
   }
 });
 
-function handleMovePlayer({ id, pos, vel }) {
-  updateAgent(id, pos, vel);
+function handleMovePlayer({ id, pos, vel, tagged }) {
+  updateAgent(id, pos, vel, tagged);
 
   // io.sockets.in(roomName).emit("changePlayerPosition", { id, pos, vel });
 }
