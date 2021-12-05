@@ -11,7 +11,6 @@ let playerID = "";
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("changePlayerPosition", handleChangePlayerPosition);
-socket.on("gameState", handleGameState);
 
 function setup() {
   // * set canvas size
@@ -26,6 +25,8 @@ function setup() {
   // * initial device motion coords
   x = 0;
   y = 0;
+
+  socket.on("gameState", handleGameState);
 }
 
 function draw() {
@@ -34,8 +35,6 @@ function draw() {
   // draw ellipse
   noStroke();
 
-  console.log(agents);
-
   // display variables
   fill(255);
   text("x: " + x, 25, 25);
@@ -43,21 +42,23 @@ function draw() {
 
   obsticles.forEach((o) => o.render());
 
-  for (let i = 0; i < agents.length; i++) {
-    for (let j = 0; j < i; j++) {
-      agents[i].collide(agents[j]);
-    }
-  }
+  // for (let i = 0; i < agents.length; i++) {
+  //   for (let j = 0; j < i; j++) {
+  //     agents[i].collide(agents[j]);
+  //   }
+  // }
+
+  const agentsMvmt = {};
 
   for (let i = 0; i < agents.length; i++) {
-    agents[i].resolveRectCircleCollision(obsticles);
+    // agents[i].resolveRectCircleCollision(obsticles);
 
-    agents[i].move();
+    agentsMvmt[agents[i].id] = agents[i].move();
     agents[i].render(playerID);
   }
 
   // TODO: emit new state
-  // ? create all agents on BE and use functions here ?
+  socket.emit("updateMvmt", agentsMvmt);
 }
 
 function getAddAgentPayload() {
@@ -68,32 +69,30 @@ function getAddAgentPayload() {
   };
 }
 
-function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
+function getAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
   const agent = new Agent(id, pos, vel, radius, tagged, alive, obsticles);
+  return agent;
+}
+
+function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
+  const agent = getAgent({ id, pos, vel, radius, tagged, alive, obsticles });
   agents.push(agent);
 }
 
 function handleDisplayPlayer(data) {
   playerID = data.id;
-  addNewAgent(data);
-}
-
-function handleChangePlayerPosition({ id, pos, vel }) {
-  const foundAgent = agents.find((a) => a.id === id);
-
-  if (foundAgent && foundAgent.id !== playerID) {
-    foundAgent.changeVel(vel);
-    foundAgent.changePos(pos);
-  }
 }
 
 function handleGameState(unparsedGameState) {
   const parsedGameState = JSON.parse(unparsedGameState);
 
   Object.keys(parsedGameState.agents).forEach((id) => {
-    const agenttFromBEisOnFE = agents.some((a) => a.id === id);
-    if (!agenttFromBEisOnFE) {
+    const agenttFromServer = agents.find((a) => a.id === id);
+    if (!agenttFromServer) {
       addNewAgent({ id, ...parsedGameState.agents[id], obsticles });
+    } else {
+      agenttFromServer.changePos(parsedGameState.agents[id].pos);
+      agenttFromServer.changeVel(parsedGameState.agents[id].vel);
     }
   });
   // TODO:

@@ -100,6 +100,11 @@ class Agent {
     this.checkBoundaries();
 
     if (this.imune) this.imune--;
+
+    return {
+      pos: { x: this.pos.x, y: this.pos.y },
+      vel: { x: this.vel.x, y: this.vel.y },
+    };
   }
 
   checkBoundaries() {

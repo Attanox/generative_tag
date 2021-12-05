@@ -16,6 +16,13 @@ io.on("connection", (client) => {
   // * once client connects join them to game
   client.on("joinGame", handleJoinGame);
   client.on("movePlayer", handleMovePlayer);
+  client.on("updateMvmt", handleUpdateMvmt);
+
+  function handleUpdateMvmt(data) {
+    Object.keys(data).forEach((agentID) => {
+      updateAgent(agentID, data[agentID].pos, data[agentID].vel);
+    });
+  }
 
   function handleJoinGame({ roomName: room, player }) {
     const id = uuidv4();
@@ -33,7 +40,8 @@ io.on("connection", (client) => {
     };
 
     addAgent(id, playerProps);
-    io.sockets.in(roomName).emit("displayPlayer", playerProps);
+    // // TODO: test without this
+    client.emit("displayPlayer", playerProps);
 
     startGameInterval(roomName);
   }
@@ -59,6 +67,20 @@ io.on("connection", (client) => {
     };
   }
 
+  function updateAgent(id, pos, vel) {
+    state[roomName] = {
+      ...state[roomName],
+      agents: {
+        ...state[roomName].agents,
+        [id]: {
+          ...state[roomName].agents[id],
+          pos,
+          vel,
+        },
+      },
+    };
+  }
+
   function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
       emitGameState(roomName, state[roomName]);
@@ -67,19 +89,9 @@ io.on("connection", (client) => {
 });
 
 function handleMovePlayer({ id, pos, vel }) {
-  state[roomName] = {
-    ...state[roomName],
-    agents: {
-      ...state[roomName].agents,
-      [id]: {
-        ...state[roomName].agents[id],
-        pos,
-        vel,
-      },
-    },
-  };
+  updateAgent(id, pos, vel);
 
-  io.sockets.in(roomName).emit("changePlayerPosition", { id, pos, vel });
+  // io.sockets.in(roomName).emit("changePlayerPosition", { id, pos, vel });
 }
 
 function emitGameState(room, gameState) {
