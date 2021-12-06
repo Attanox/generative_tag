@@ -1,3 +1,4 @@
+// const socket = io.connect("http://localhost:3000/");
 const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
@@ -12,6 +13,7 @@ let obsticles = [];
 let playerID = "";
 
 socket.on("displayPlayer", handleDisplayPlayer);
+socket.on("playerExit", handleExitPlayer);
 
 function setup() {
   // * set canvas size
@@ -127,6 +129,16 @@ function addMotionListener() {
   });
 }
 
+function handleExitPlayer(id) {
+  const exitedPlayerID = agents.findIndex((a) => a.id === id);
+
+  agents.splice(exitedPlayerID, 1);
+}
+
+function handleUnload() {
+  return socket.emit("exit", playerID);
+}
+
 // ****************************************** iOS ***************************************************************
 function removeBanner() {
   var element = document.getElementById("motion-permission");
@@ -151,6 +163,8 @@ function ClickRequestDeviceMotionEvent() {
 }
 
 window.onload = function () {
+  window.addEventListener("beforeunload", handleUnload);
+
   // * Check if is IOS 13 when page loads.
   if (
     window.DeviceMotionEvent &&

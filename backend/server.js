@@ -17,6 +17,13 @@ io.on("connection", (client) => {
   client.on("joinGame", handleJoinGame);
   client.on("movePlayer", handleMovePlayer);
   client.on("updateMvmt", handleUpdateMvmt);
+  client.on("exit", handleExit);
+
+  function handleExit(id) {
+    delete state[roomName].agents[id];
+
+    io.sockets.in(roomName).emit("playerExit", id);
+  }
 
   function handleUpdateMvmt(data) {
     Object.keys(data).forEach((agentID) => {
