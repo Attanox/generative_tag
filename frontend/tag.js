@@ -1,7 +1,4 @@
-// const socket = io.connect("http://127.0.0.1:3000");
-const socket = io.connect(
-  "http://44ae-2a02-ab04-29c9-fa00-1126-b026-574d-f090.ngrok.io"
-);
+const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;

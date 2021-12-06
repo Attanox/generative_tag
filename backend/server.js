@@ -113,7 +113,6 @@ function emitGameState(room, gameState) {
   io.sockets.in(room).emit("gameState", JSON.stringify(gameState));
 }
 
-// TODO: use .env
-io.listen(3000);
+io.listen(process.env.PORT || 3000);
 
 console.log("🚀🚀🚀");
