@@ -97,16 +97,16 @@ io.on("connection", (client) => {
     };
   }
 
+  function handleMovePlayer({ id, pos, vel, tagged }) {
+    updateAgent(id, pos, vel, tagged);
+  }
+
   function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
       emitGameState(roomName, state[roomName]);
     }, 1000 / FRAME_RATE);
   }
 });
-
-function handleMovePlayer({ id, pos, vel, tagged }) {
-  updateAgent(id, pos, vel, tagged);
-}
 
 function emitGameState(room, gameState) {
   // Send this event to everyone in the room.
