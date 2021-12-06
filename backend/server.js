@@ -50,7 +50,7 @@ io.on("connection", (client) => {
 
     client.emit("displayPlayer", playerProps);
 
-    startGameInterval(roomName);
+    emitGameState(roomName, state[roomName]);
   }
 
   function addObsticles(obsticles) {
@@ -99,12 +99,6 @@ io.on("connection", (client) => {
 
   function handleMovePlayer({ id, pos, vel, tagged }) {
     updateAgent(id, pos, vel, tagged);
-  }
-
-  function startGameInterval(roomName) {
-    const intervalId = setInterval(() => {
-      emitGameState(roomName, state[roomName]);
-    }, 1000 / FRAME_RATE);
   }
 });
 
