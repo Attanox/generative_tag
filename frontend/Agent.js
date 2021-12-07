@@ -7,20 +7,11 @@ class Agent {
 
   static imuneAmount = 50;
 
-  constructor(
-    id,
-    pos,
-    vel,
-    radius,
-    tagged = false,
-    alive = false,
-    obsticles = []
-  ) {
+  constructor(id, pos, vel, radius, tagged = false, obsticles = []) {
     this.id = id;
 
     this.radius = radius;
     this.tagged = tagged;
-    this.alive = alive;
 
     this.color = this.getColor();
     this.vel = createVector(vel.x, vel.y);
@@ -65,13 +56,10 @@ class Agent {
   }
 
   collide(other) {
-    // do not collide with yourself
-    if (other == this) {
-      return;
-    }
+    let otherPosition = createVector(other.pos.x, other.pos.y);
 
     // find out if two agents are close
-    let relative = p5.Vector.sub(other.pos, this.pos);
+    let relative = p5.Vector.sub(otherPosition, this.pos);
     let dist = relative.mag() - (this.radius + other.radius);
 
     // if agents are too close
@@ -79,18 +67,18 @@ class Agent {
       // send them opposite ways
       let movement = relative.copy().setMag(abs(dist / 2));
       this.pos.sub(movement);
-      other.pos.add(movement);
+      // other.pos.add(movement);
 
-      if (other.tagged && !this.isImune()) {
+      if (other.tagged) {
         this.tag();
-        other.untag();
-        return;
+        return false;
       }
-      if (this.tagged && !other.isImune()) {
-        other.tag();
+      if (this.tagged) {
         this.untag();
+        return true;
       }
     }
+    return other.tagged;
   }
 
   isImune() {
@@ -106,9 +94,11 @@ class Agent {
     if (this.imune) this.imune--;
 
     return {
+      id: this.id,
       pos: { x: this.pos.x, y: this.pos.y },
       vel: { x: this.vel.x, y: this.vel.y },
       tagged: this.tagged,
+      radius: this.radius,
     };
   }
 
@@ -151,10 +141,6 @@ class Agent {
 
       this.checkBoundaries();
     }
-  }
-
-  isPlayer() {
-    return this.alive;
   }
 
   tag() {
@@ -280,12 +266,21 @@ class Agent {
       strokeWeight(3);
       stroke(100, 100, 250);
     }
-    // * for distinguishing imune agents
-    // if (this.isImune()) {
-    //   strokeWeight(3);
-    //   stroke(250, 250, 250);
-    // }
     ellipse(this.pos.x, this.pos.y, this.radius * 2);
     noStroke();
+  }
+
+  static configRender({ pos, radius, vel, tagged }) {
+    let fillColor;
+
+    if (tagged) {
+      fillColor = color(Agent.taggedColor);
+    } else {
+      fillColor = color(Agent.notTaggedColor);
+    }
+
+    fill(fillColor);
+
+    ellipse(pos.x, pos.y, radius * 2);
   }
 }

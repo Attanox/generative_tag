@@ -36,6 +36,17 @@ io.on("connection", (client) => {
     });
   }
 
+  function handleUpdateTagged(data) {
+    Object.keys(data).forEach((agentID) => {
+      updateAgent(
+        agentID,
+        state[roomName][agentID].pos,
+        state[roomName][agentID].vel,
+        data[agentID].tagged
+      );
+    });
+  }
+
   function handleJoinGame({ roomName: room, player, obsticles }) {
     const id = uuidv4();
 
@@ -47,7 +58,6 @@ io.on("connection", (client) => {
     const playerProps = {
       id,
       tagged: isTagged(),
-      alive: true,
       ...player,
     };
 
@@ -57,7 +67,7 @@ io.on("connection", (client) => {
 
     client.emit("displayPlayer", playerProps);
 
-    emitGameState(roomName, state[roomName]);
+    // emitGameState(roomName, state[roomName]);
   }
 
   function addObsticles(obsticles) {
@@ -107,6 +117,10 @@ io.on("connection", (client) => {
   function handleMovePlayer({ id, pos, vel, tagged }) {
     updateAgent(id, pos, vel, tagged);
   }
+
+  setInterval(() => {
+    emitGameState(roomName, state[roomName]);
+  }, 1000 / FRAME_RATE);
 });
 
 function emitGameState(room, gameState) {

@@ -1,5 +1,5 @@
-// const socket = io.connect("http://localhost:3000/");
-const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+const socket = io.connect("http://localhost:3000/");
+// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
@@ -11,6 +11,9 @@ let x, y;
 let agents = [];
 let obsticles = [];
 let playerID = "";
+
+let agentData = [];
+let player;
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
@@ -47,23 +50,26 @@ function draw() {
   obsticles.forEach((o) => o.render());
 
   let agentsMvmt = {};
+  let agentsTagged = {};
 
-  for (let i = 0; i < agents.length; i++) {
-    for (let j = 0; j < i; j++) {
-      agents[i].collide(agents[j]);
+  agentData.forEach((agentConfig) => {
+    // * we render current player separately below
+    if (agentConfig.id !== playerID) {
+      Agent.configRender(agentConfig);
+      agentsTagged[agentConfig.id] = player.collide(agentConfig);
     }
+  });
+
+  if (player) {
+    player.resolveRectCircleCollision(obsticles);
+    agentsMvmt[playerID] = player.move();
+    player.render(playerID);
   }
 
-  for (let i = 0; i < agents.length; i++) {
-    agents[i].resolveRectCircleCollision(obsticles);
+  console.log(agentsTagged);
 
-    // * this function will collect each agents position, velocity & tagged status in one place
-    agentsMvmt[agents[i].id] = agents[i].move();
-    agents[i].render(playerID);
-  }
-
-  // TODO: emit new state
   socket.emit("updateMvmt", agentsMvmt);
+  // socket.emit("updateTagged", agentsTagged);
 }
 
 function createObsticles() {
@@ -78,34 +84,30 @@ function getAddAgentPayload() {
   };
 }
 
-function getAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
-  const agent = new Agent(id, pos, vel, radius, tagged, alive, obsticles);
+function getAgent({ id, pos, vel, radius, tagged }) {
+  const agent = new Agent(id, pos, vel, radius, tagged, obsticles);
   return agent;
 }
 
-function addNewAgent({ id, pos, vel, radius, tagged = false, alive = false }) {
-  const agent = getAgent({ id, pos, vel, radius, tagged, alive, obsticles });
+function addNewAgent({ id, pos, vel, radius, tagged }) {
+  const agent = getAgent({ id, pos, vel, radius, tagged, obsticles });
   agents.push(agent);
 }
 
 function handleDisplayPlayer(data) {
   playerID = data.id;
+  player = getAgent(data);
 }
 
 function handleGameState(unparsedGameState) {
   const parsedGameState = JSON.parse(unparsedGameState);
 
+  agentData = [];
+
   Object.keys(parsedGameState.agents).forEach((id) => {
-    const agenttFromServer = agents.find((a) => a.id === id);
-    if (!agenttFromServer) {
-      addNewAgent({ id, ...parsedGameState.agents[id], obsticles });
-    } else {
-      agenttFromServer.changePos(parsedGameState.agents[id].pos);
-      agenttFromServer.changeVel(parsedGameState.agents[id].vel);
-      agenttFromServer.changeTagged(parsedGameState.agents[id].tagged);
-    }
+    agentData.push({ ...parsedGameState.agents[id] });
   });
-  // TODO:
+
   obsticles = parsedGameState.obsticles.map((obst) => new Obsticle(obst));
 }
 
@@ -115,17 +117,15 @@ function addMotionListener() {
     // * get accelerometer values
     x = parseInt(e.accelerationIncludingGravity.x);
     y = parseInt(e.accelerationIncludingGravity.y);
-    const currentPlayer = agents.find((a) => `${a.id}` === `${playerID}`);
 
-    if (currentPlayer) {
-      currentPlayer.changePosition(x, y);
-      socket.emit("movePlayer", {
-        id: playerID,
-        pos: { x: currentPlayer.pos.x, y: currentPlayer.pos.y },
-        vel: { x: currentPlayer.vel.x, y: currentPlayer.vel.y },
-        tagged: currentPlayer.tagged,
-      });
-    }
+    player.changePosition(x, y);
+    socket.emit("movePlayer", {
+      id: playerID,
+      pos: { x: player.pos.x, y: player.pos.y },
+      vel: { x: player.vel.x, y: player.vel.y },
+      tagged: player.tagged,
+      radius: player.radius,
+    });
   });
 }
 
