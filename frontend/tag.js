@@ -17,6 +17,7 @@ let player;
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
+socket.on("gameState", handleGameState);
 
 function setup() {
   // * set canvas size
@@ -32,8 +33,6 @@ function setup() {
   // * initial device motion coords
   x = 0;
   y = 0;
-
-  socket.on("gameState", handleGameState);
 }
 
 function draw() {
@@ -67,6 +66,7 @@ function draw() {
     player.render(playerID);
   }
 
+  socket.emit("updateTagged", agentsTagged);
   socket.emit("updateMvmt", agentsMvmt);
 }
 

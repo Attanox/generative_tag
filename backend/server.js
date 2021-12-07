@@ -17,6 +17,7 @@ io.on("connection", (client) => {
   client.on("joinGame", handleJoinGame);
   client.on("movePlayer", handleMovePlayer);
   client.on("updateMvmt", handleUpdateMvmt);
+  client.on("updateTagged", handleUpdateTagged);
   client.on("exit", handleExit);
 
   function handleExit(id) {
@@ -38,12 +39,10 @@ io.on("connection", (client) => {
 
   function handleUpdateTagged(data) {
     Object.keys(data).forEach((agentID) => {
-      updateAgent(
-        agentID,
-        state[roomName][agentID].pos,
-        state[roomName][agentID].vel,
-        data[agentID].tagged
-      );
+      state[roomName][agentID] = {
+        ...state[roomName][agentID],
+        tagged: data[agentID],
+      };
     });
   }
 
