@@ -61,15 +61,13 @@ function draw() {
   });
 
   if (player) {
+    deviceMoved();
     player.resolveRectCircleCollision(obsticles);
     agentsMvmt[playerID] = player.move();
     player.render(playerID);
   }
 
-  console.log(agentsTagged);
-
   socket.emit("updateMvmt", agentsMvmt);
-  // socket.emit("updateTagged", agentsTagged);
 }
 
 function createObsticles() {
@@ -111,13 +109,8 @@ function handleGameState(unparsedGameState) {
   obsticles = parsedGameState.obsticles.map((obst) => new Obsticle(obst));
 }
 
-function addMotionListener() {
-  window.addEventListener("devicemotion", (e) => {
-    // console.log({ e });
-    // * get accelerometer values
-    x = parseInt(e.accelerationIncludingGravity.x);
-    y = parseInt(e.accelerationIncludingGravity.y);
-
+function deviceMoved() {
+  if (player) {
     player.changePosition(x, y);
     socket.emit("movePlayer", {
       id: playerID,
@@ -126,6 +119,15 @@ function addMotionListener() {
       tagged: player.tagged,
       radius: player.radius,
     });
+  }
+}
+
+function addMotionListener() {
+  window.addEventListener("devicemotion", (e) => {
+    // console.log({ e });
+    // * get accelerometer values
+    x = parseInt(e.accelerationIncludingGravity.x);
+    y = parseInt(e.accelerationIncludingGravity.y);
   });
 }
 

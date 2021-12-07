@@ -114,7 +114,7 @@ io.on("connection", (client) => {
     };
   }
 
-  function handleMovePlayer({ id, pos, vel, tagged }) {
+  function handleMovePlayer({ id, pos, vel, tagged, radius }) {
     updateAgent(id, pos, vel, tagged);
   }
 
