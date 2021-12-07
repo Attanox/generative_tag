@@ -1,5 +1,5 @@
-const socket = io.connect("http://localhost:3000/");
-// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+// const socket = io.connect("http://localhost:3000/");
+const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
