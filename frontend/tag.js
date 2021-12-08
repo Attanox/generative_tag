@@ -14,6 +14,7 @@ let playerID = "";
 
 let agentData = [];
 let player;
+let taggedPlayer = "";
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
@@ -49,13 +50,14 @@ function draw() {
   obsticles.forEach((o) => o.render());
 
   let agentsMvmt = {};
-  let agentsTagged = {};
 
+  let newTaggedPlayer;
   agentData.forEach((agentConfig) => {
     // * we render current player separately below
     if (agentConfig.id !== playerID) {
-      Agent.configRender(agentConfig);
-      agentsTagged[agentConfig.id] = player.collide(agentConfig);
+      Agent.configRender(agentConfig, taggedPlayer);
+      const res = player.collide(agentConfig, taggedPlayer);
+      if (res) newTaggedPlayer = res;
     }
   });
 
@@ -63,10 +65,10 @@ function draw() {
     deviceMoved();
     player.resolveRectCircleCollision(obsticles);
     agentsMvmt[playerID] = player.move();
-    player.render(playerID);
+    player.render(taggedPlayer);
   }
 
-  socket.emit("updateTagged", agentsTagged);
+  if (newTaggedPlayer) socket.emit("updateTagged", newTaggedPlayer);
   socket.emit("updateMvmt", agentsMvmt);
 }
 
@@ -82,13 +84,13 @@ function getAddAgentPayload() {
   };
 }
 
-function getAgent({ id, pos, vel, radius, tagged }) {
-  const agent = new Agent(id, pos, vel, radius, tagged, obsticles);
+function getAgent({ id, pos, vel, radius }) {
+  const agent = new Agent(id, pos, vel, radius, obsticles);
   return agent;
 }
 
-function addNewAgent({ id, pos, vel, radius, tagged }) {
-  const agent = getAgent({ id, pos, vel, radius, tagged, obsticles });
+function addNewAgent({ id, pos, vel, radius }) {
+  const agent = getAgent({ id, pos, vel, radius, obsticles });
   agents.push(agent);
 }
 
@@ -106,6 +108,9 @@ function handleGameState(unparsedGameState) {
     agentData.push({ ...parsedGameState.agents[id] });
   });
 
+  taggedPlayer = parsedGameState.taggedPlayer;
+  // console.log({ parsedID: parsedGameState.taggedPlayer });
+
   obsticles = parsedGameState.obsticles.map((obst) => new Obsticle(obst));
 }
 
@@ -116,7 +121,6 @@ function deviceMoved() {
       id: playerID,
       pos: { x: player.pos.x, y: player.pos.y },
       vel: { x: player.vel.x, y: player.vel.y },
-      tagged: player.tagged,
       radius: player.radius,
     });
   }

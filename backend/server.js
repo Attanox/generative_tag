@@ -28,22 +28,12 @@ io.on("connection", (client) => {
 
   function handleUpdateMvmt(data) {
     Object.keys(data).forEach((agentID) => {
-      updateAgent(
-        agentID,
-        data[agentID].pos,
-        data[agentID].vel,
-        data[agentID].tagged
-      );
+      updateAgent(agentID, data[agentID].pos, data[agentID].vel);
     });
   }
 
-  function handleUpdateTagged(data) {
-    Object.keys(data).forEach((agentID) => {
-      state[roomName][agentID] = {
-        ...state[roomName][agentID],
-        tagged: data[agentID],
-      };
-    });
+  function handleUpdateTagged(taggedPlayerID) {
+    state[roomName].taggedPlayer = taggedPlayerID;
   }
 
   function handleJoinGame({ roomName: room, player, obsticles }) {
@@ -56,17 +46,18 @@ io.on("connection", (client) => {
 
     const playerProps = {
       id,
-      tagged: isTagged(),
       ...player,
     };
+
+    if (!someAgents()) {
+      state[roomName].taggedPlayer = id;
+    }
 
     addObsticles(obsticles);
 
     addAgent(id, playerProps);
 
     client.emit("displayPlayer", playerProps);
-
-    // emitGameState(roomName, state[roomName]);
   }
 
   function addObsticles(obsticles) {
@@ -82,10 +73,6 @@ io.on("connection", (client) => {
     return Object.keys(agents).length !== 0;
   }
 
-  function isTagged() {
-    return someAgents() ? false : true;
-  }
-
   function addAgent(id, payload) {
     state[roomName] = {
       ...state[roomName],
@@ -98,7 +85,7 @@ io.on("connection", (client) => {
     };
   }
 
-  function updateAgent(id, pos, vel, tagged) {
+  function updateAgent(id, pos, vel) {
     state[roomName] = {
       ...state[roomName],
       agents: {
@@ -107,14 +94,13 @@ io.on("connection", (client) => {
           ...state[roomName].agents[id],
           pos,
           vel,
-          tagged,
         },
       },
     };
   }
 
-  function handleMovePlayer({ id, pos, vel, tagged, radius }) {
-    updateAgent(id, pos, vel, tagged);
+  function handleMovePlayer({ id, pos, vel }) {
+    updateAgent(id, pos, vel);
   }
 
   setInterval(() => {

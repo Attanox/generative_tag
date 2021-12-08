@@ -9,6 +9,7 @@ function initGame() {
 
 function createGameState() {
   return {
+    taggedPlayer: "",
     agents: {},
     obsticles: [],
   };

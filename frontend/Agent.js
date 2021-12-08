@@ -5,15 +5,13 @@ class Agent {
   static maxSpeed = 100;
   static maxForce = 5;
 
-  static imuneAmount = 50;
+  static imuneAmount = 300;
 
-  constructor(id, pos, vel, radius, tagged = false, obsticles = []) {
+  constructor(id, pos, vel, radius, obsticles = []) {
     this.id = id;
 
     this.radius = radius;
-    this.tagged = tagged;
 
-    this.color = this.getColor();
     this.vel = createVector(vel.x, vel.y);
     this.pos = createVector(pos.x, pos.y);
 
@@ -30,12 +28,8 @@ class Agent {
     this.pos = createVector(pos.x, pos.y);
   }
 
-  changeTagged(tagged) {
-    this.tagged = tagged;
-  }
-
-  getColor() {
-    if (this.tagged) {
+  getColor(taggedPlayerID) {
+    if (taggedPlayerID === this.id) {
       return color(Agent.taggedColor);
     } else {
       return color(Agent.notTaggedColor);
@@ -55,7 +49,7 @@ class Agent {
     return { x: p5v.x, y: p5v.y };
   }
 
-  collide(other) {
+  collide(other, taggedPlayerID) {
     let otherPosition = createVector(other.pos.x, other.pos.y);
 
     // find out if two agents are close
@@ -69,16 +63,17 @@ class Agent {
       this.pos.sub(movement);
       // other.pos.add(movement);
 
-      if (other.tagged) {
-        this.tag();
-        return false;
+      // * tagging part
+      if (this.id === taggedPlayerID) {
+        this.pos.x = this.pos.x - this.radius;
+        this.pos.y = this.pos.y - this.radius;
+        return other.id;
       }
-      if (this.tagged) {
-        this.untag();
-        return true;
+
+      if (other.id === taggedPlayerID) {
+        return this.id;
       }
     }
-    return other.tagged;
   }
 
   isImune() {
@@ -97,7 +92,6 @@ class Agent {
       id: this.id,
       pos: { x: this.pos.x, y: this.pos.y },
       vel: { x: this.vel.x, y: this.vel.y },
-      tagged: this.tagged,
       radius: this.radius,
     };
   }
@@ -131,15 +125,6 @@ class Agent {
     this.pos.y = this.pos.y - y;
 
     this.checkBoundaries();
-  }
-
-  tag() {
-    this.tagged = true;
-  }
-
-  untag() {
-    this.imune = Agent.imuneAmount;
-    this.tagged = false;
   }
 
   // taken from https://www.youtube.com/watch?v=4hA7G3gup-4&list=PLLHSiGX_Xw7GPGdb5GZZGYlQsYPg71N3n
@@ -249,21 +234,22 @@ class Agent {
     });
   }
 
-  render(id) {
-    this.color = this.getColor();
-    fill(this.color);
-    if (this.id === id) {
-      strokeWeight(3);
-      stroke(100, 100, 250);
-    }
+  render(taggedPlayerID) {
+    const color = this.getColor(taggedPlayerID);
+    fill(color);
+
+    // * stroke so we know which one is ours
+    strokeWeight(3);
+    stroke(100, 100, 250);
+
     ellipse(this.pos.x, this.pos.y, this.radius * 2);
     noStroke();
   }
 
-  static configRender({ pos, radius, vel, tagged }) {
+  static configRender({ id, pos, radius, vel }, taggedPlayerID) {
     let fillColor;
 
-    if (tagged) {
+    if (taggedPlayerID === id) {
       fillColor = color(Agent.taggedColor);
     } else {
       fillColor = color(Agent.notTaggedColor);
