@@ -17,6 +17,8 @@ class Agent {
 
     this.imune = 0;
 
+    this.hasVessel = false;
+
     this.obsticles = obsticles;
   }
 
@@ -74,6 +76,26 @@ class Agent {
         return this.id;
       }
     }
+  }
+
+  possesion(vessel) {
+    let otherPosition = createVector(vessel.pos.x, vessel.pos.y);
+
+    // find out if two agents are close
+    let relative = p5.Vector.sub(otherPosition, this.pos);
+    let dist = relative.mag() - (this.radius + vessel.radius);
+
+    // if agents are too close
+    if (dist < 0) {
+      // send them opposite ways
+      let movement = relative.copy().setMag(abs(dist / 2));
+      this.pos = vessel.pos;
+      // vessel.pos.add(movement);
+
+      return vessel.id;
+    }
+
+    return "";
   }
 
   isImune() {
@@ -246,10 +268,16 @@ class Agent {
     noStroke();
   }
 
-  static configRender({ id, pos, radius, vel }, taggedPlayerID) {
+  static configRender(
+    { id, pos, radius, vel },
+    taggedPlayerID,
+    isVessel = false
+  ) {
     let fillColor;
 
-    if (taggedPlayerID === id) {
+    if (isVessel) {
+      fillColor = color("rgba(255, 255, 255, 0)");
+    } else if (taggedPlayerID === id) {
       fillColor = color(Agent.taggedColor);
     } else {
       fillColor = color(Agent.notTaggedColor);
@@ -257,6 +285,8 @@ class Agent {
 
     fill(fillColor);
 
+    if (isVessel) stroke(255);
     ellipse(pos.x, pos.y, radius * 2);
+    noStroke();
   }
 }

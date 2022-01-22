@@ -1,5 +1,5 @@
-// const socket = io.connect("http://localhost:3000/");
-const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+const socket = io.connect("http://localhost:3000/");
+// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
@@ -15,6 +15,8 @@ let playerID = "";
 let agentData = [];
 let player;
 let taggedPlayer = "";
+
+let vessels = [];
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
@@ -37,6 +39,7 @@ function setup() {
 }
 
 function draw() {
+  console.log({ vessels });
   // * set background color to white
   background(30);
   // * draw ellipse
@@ -56,9 +59,16 @@ function draw() {
     // * we render current player separately below
     if (agentConfig.id !== playerID) {
       Agent.configRender(agentConfig, taggedPlayer);
-      const res = player.collide(agentConfig, taggedPlayer);
-      if (res) newTaggedPlayer = res;
+      const collided = player.collide(agentConfig, taggedPlayer);
+      if (collided) newTaggedPlayer = res;
     }
+  });
+
+  let removeVessel;
+  vessels.forEach((vesselConfig) => {
+    // * we render current player separately below
+    Agent.configRender(vesselConfig, taggedPlayer, true);
+    removeVessel = player.possesion(vesselConfig);
   });
 
   if (player) {
@@ -69,6 +79,7 @@ function draw() {
   }
 
   if (newTaggedPlayer) socket.emit("updateTagged", newTaggedPlayer);
+  if (removeVessel) socket.emit("removeVessel", removeVessel);
   socket.emit("updateMvmt", agentsMvmt);
 }
 
@@ -77,9 +88,12 @@ function createObsticles() {
 }
 
 function getAddAgentPayload() {
+  const pos = Agent.getStartingPosition();
+
   return {
-    pos: Agent.getStartingPosition(),
+    pos,
     vel: Agent.getStartingVelocity(),
+    oppositePos: { ...pos, y: CANVAS_HEIGHT - pos.y },
     radius: RADIUS,
   };
 }
@@ -112,6 +126,8 @@ function handleGameState(unparsedGameState) {
   // console.log({ parsedID: parsedGameState.taggedPlayer });
 
   obsticles = parsedGameState.obsticles.map((obst) => new Obsticle(obst));
+
+  vessels = parsedGameState.vessels.map((v) => getAgent(v));
 }
 
 function deviceMoved() {

@@ -19,6 +19,7 @@ io.on("connection", (client) => {
   client.on("updateMvmt", handleUpdateMvmt);
   client.on("updateTagged", handleUpdateTagged);
   client.on("exit", handleExit);
+  client.on("removeVessel", handleRemoveVessel);
 
   function handleExit(id) {
     delete state[roomName].agents[id];
@@ -46,6 +47,7 @@ io.on("connection", (client) => {
 
     const playerProps = {
       id,
+      hasVessel: false,
       ...player,
     };
 
@@ -56,6 +58,8 @@ io.on("connection", (client) => {
     addObsticles(obsticles);
 
     addAgent(id, playerProps);
+
+    addVessel(player.oppositePos, player.vel, player.radius);
 
     client.emit("displayPlayer", playerProps);
   }
@@ -71,6 +75,21 @@ io.on("connection", (client) => {
   function someAgents() {
     const agents = state[roomName].agents;
     return Object.keys(agents).length !== 0;
+  }
+
+  function addVessel(pos, vel, radius) {
+    const id = uuidv4();
+    state[roomName] = {
+      ...state[roomName],
+      vessels: [...state[roomName].vessels, { id, pos, vel, radius }],
+    };
+  }
+
+  function handleRemoveVessel(vesselID) {
+    state[roomName] = {
+      ...state[roomName],
+      vessels: state[roomName].vessels.filter((v) => v.id !== vesselID),
+    };
   }
 
   function addAgent(id, payload) {

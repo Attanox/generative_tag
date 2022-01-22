@@ -12,5 +12,6 @@ function createGameState() {
     taggedPlayer: "",
     agents: {},
     obsticles: [],
+    vessels: [],
   };
 }
