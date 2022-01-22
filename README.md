@@ -1,6 +1,6 @@
 # Generative Tag
 
-Game you played as a kid... but on yout phone
+Game you played as a kid... but on your phone
 
 ## Used technologies
 
@@ -8,13 +8,11 @@ Game you played as a kid... but on yout phone
 - [socket.io](https://socket.io/)
 - [node.js](https://nodejs.org/en/)
 
-## Development
-
-Run from root, unless told otherwise.
-
 ### Run frontend
 
 ```
+cd /frontend
+
 npx live-server
 ```
 
