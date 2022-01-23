@@ -54,12 +54,16 @@ function draw() {
   let agentsMvmt = {};
 
   let newTaggedPlayer;
+  let untaggedPlayer;
   agentData.forEach((agentConfig) => {
     // * we render current player separately below
     if (agentConfig.id !== playerID) {
       Agent.configRender(agentConfig, taggedPlayers);
       const collided = player.collide(agentConfig, taggedPlayers);
-      if (collided) newTaggedPlayer = collided;
+      if (collided) {
+        newTaggedPlayer = collided.tag;
+        untaggedPlayer = collided.untag;
+      }
     }
   });
 
@@ -77,7 +81,11 @@ function draw() {
     player.render(taggedPlayers);
   }
 
-  if (newTaggedPlayer) socket.emit("updateTagged", newTaggedPlayer);
+  if (newTaggedPlayer)
+    socket.emit("updateTagged", {
+      tag: newTaggedPlayer,
+      untag: untaggedPlayer,
+    });
   if (removeVessel) {
     socket.emit("removeVessel", {
       vesselID: removeVessel,

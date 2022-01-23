@@ -39,8 +39,12 @@ io.on("connection", (client) => {
     state[roomName].taggedPlayers = Array.from(taggedPlayersSet);
   }
 
-  function handleUpdateTagged(taggedPlayerID) {
-    setTaggedPlayers(taggedPlayerID);
+  function handleUpdateTagged({ tag, untag }) {
+    setTaggedPlayers(tag);
+
+    state[roomName].taggedPlayers = state[roomName].taggedPlayers.filter(
+      (t) => t !== untag
+    );
   }
 
   function handleJoinGame({ roomName: room, player, obsticles }) {
@@ -58,28 +62,29 @@ io.on("connection", (client) => {
 
     setTaggedPlayers(id);
 
-    if (!someAgents()) {
-      addVessel(player.oppositePos, player.vel, player.radius);
-      addVessel(
-        { ...player.oppositePos, y: player.oppositePos.y + 50 },
-        player.vel,
-        player.radius
-      );
-      addVessel(
-        { ...player.oppositePos, y: player.oppositePos.y - 50 },
-        player.vel,
-        player.radius
-      );
-      addVessel(
-        { ...player.oppositePos, x: player.oppositePos.x + 50 },
-        player.vel,
-        player.radius
-      );
-    }
-
     addObsticles(obsticles);
 
     addAgent(id, playerProps);
+
+    if (someAgents() && state[roomName].vessels.length + 2 < agentsLength()) {
+      addVessel(player.oppositePos, player.vel, player.radius);
+
+      // addVessel(
+      //   { ...player.oppositePos, y: player.oppositePos.y + 50 },
+      //   player.vel,
+      //   player.radius
+      // );
+      // addVessel(
+      //   { ...player.oppositePos, y: player.oppositePos.y - 50 },
+      //   player.vel,
+      //   player.radius
+      // );
+      // addVessel(
+      //   { ...player.oppositePos, x: player.oppositePos.x + 50 },
+      //   player.vel,
+      //   player.radius
+      // );
+    }
 
     client.emit("displayPlayer", playerProps);
   }
@@ -92,9 +97,13 @@ io.on("connection", (client) => {
     };
   }
 
-  function someAgents() {
+  function agentsLength() {
     const agents = state[roomName].agents;
-    return Object.keys(agents).length !== 0;
+    return Object.keys(agents).length;
+  }
+
+  function someAgents() {
+    return agentsLength() !== 0;
   }
 
   function addVessel(pos, vel, radius) {

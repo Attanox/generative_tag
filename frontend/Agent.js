@@ -64,14 +64,21 @@ class Agent {
       // other.pos.add(movement);
 
       // * tagging part
+      if (
+        taggedPlayersID.includes(this.id) &&
+        taggedPlayersID.includes(other.id)
+      ) {
+        return "";
+      }
+
       if (taggedPlayersID.includes(this.id)) {
         this.pos.x = this.pos.x - this.radius;
         this.pos.y = this.pos.y - this.radius;
-        return other.id;
+        return { tag: other.id, untag: this.id };
       }
 
       if (taggedPlayersID.includes(other.id)) {
-        return this.id;
+        return { tag: this.id, untag: other.id };
       }
     }
   }
