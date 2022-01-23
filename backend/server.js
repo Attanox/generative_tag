@@ -33,8 +33,14 @@ io.on("connection", (client) => {
     });
   }
 
+  function setTaggedPlayers(id) {
+    const taggedPlayersSet = new Set([...state[roomName].taggedPlayers, id]);
+
+    state[roomName].taggedPlayers = Array.from(taggedPlayersSet);
+  }
+
   function handleUpdateTagged(taggedPlayerID) {
-    state[roomName].taggedPlayer = taggedPlayerID;
+    setTaggedPlayers(taggedPlayerID);
   }
 
   function handleJoinGame({ roomName: room, player, obsticles }) {
@@ -47,19 +53,33 @@ io.on("connection", (client) => {
 
     const playerProps = {
       id,
-      hasVessel: false,
       ...player,
     };
 
+    setTaggedPlayers(id);
+
     if (!someAgents()) {
-      state[roomName].taggedPlayer = id;
+      addVessel(player.oppositePos, player.vel, player.radius);
+      addVessel(
+        { ...player.oppositePos, y: player.oppositePos.y + 50 },
+        player.vel,
+        player.radius
+      );
+      addVessel(
+        { ...player.oppositePos, y: player.oppositePos.y - 50 },
+        player.vel,
+        player.radius
+      );
+      addVessel(
+        { ...player.oppositePos, x: player.oppositePos.x + 50 },
+        player.vel,
+        player.radius
+      );
     }
 
     addObsticles(obsticles);
 
     addAgent(id, playerProps);
-
-    addVessel(player.oppositePos, player.vel, player.radius);
 
     client.emit("displayPlayer", playerProps);
   }
@@ -85,10 +105,13 @@ io.on("connection", (client) => {
     };
   }
 
-  function handleRemoveVessel(vesselID) {
+  function handleRemoveVessel({ vesselID, playerID }) {
     state[roomName] = {
       ...state[roomName],
       vessels: state[roomName].vessels.filter((v) => v.id !== vesselID),
+      taggedPlayers: state[roomName].taggedPlayers.filter(
+        (t) => t !== playerID
+      ),
     };
   }
 

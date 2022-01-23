@@ -14,7 +14,7 @@ let playerID = "";
 
 let agentData = [];
 let player;
-let taggedPlayer = "";
+let taggedPlayers = [];
 
 let vessels = [];
 
@@ -39,9 +39,8 @@ function setup() {
 }
 
 function draw() {
-  console.log({ vessels });
   // * set background color to white
-  background(30);
+  background("rgba(30,30,30,0.25)");
   // * draw ellipse
   noStroke();
 
@@ -58,28 +57,33 @@ function draw() {
   agentData.forEach((agentConfig) => {
     // * we render current player separately below
     if (agentConfig.id !== playerID) {
-      Agent.configRender(agentConfig, taggedPlayer);
-      const collided = player.collide(agentConfig, taggedPlayer);
-      if (collided) newTaggedPlayer = res;
+      Agent.configRender(agentConfig, taggedPlayers);
+      const collided = player.collide(agentConfig, taggedPlayers);
+      if (collided) newTaggedPlayer = collided;
     }
   });
 
   let removeVessel;
   vessels.forEach((vesselConfig) => {
     // * we render current player separately below
-    Agent.configRender(vesselConfig, taggedPlayer, true);
-    removeVessel = player.possesion(vesselConfig);
+    Agent.configRender(vesselConfig, taggedPlayers, true);
+    removeVessel = player.possesion(vesselConfig, taggedPlayers);
   });
 
   if (player) {
     deviceMoved();
     player.resolveRectCircleCollision(obsticles);
     agentsMvmt[playerID] = player.move();
-    player.render(taggedPlayer);
+    player.render(taggedPlayers);
   }
 
   if (newTaggedPlayer) socket.emit("updateTagged", newTaggedPlayer);
-  if (removeVessel) socket.emit("removeVessel", removeVessel);
+  if (removeVessel) {
+    socket.emit("removeVessel", {
+      vesselID: removeVessel,
+      playerID: player.id,
+    });
+  }
   socket.emit("updateMvmt", agentsMvmt);
 }
 
@@ -103,11 +107,6 @@ function getAgent({ id, pos, vel, radius }) {
   return agent;
 }
 
-function addNewAgent({ id, pos, vel, radius }) {
-  const agent = getAgent({ id, pos, vel, radius, obsticles });
-  agents.push(agent);
-}
-
 function handleDisplayPlayer(data) {
   playerID = data.id;
   player = getAgent(data);
@@ -122,8 +121,8 @@ function handleGameState(unparsedGameState) {
     agentData.push({ ...parsedGameState.agents[id] });
   });
 
-  taggedPlayer = parsedGameState.taggedPlayer;
-  // console.log({ parsedID: parsedGameState.taggedPlayer });
+  taggedPlayers = parsedGameState.taggedPlayers;
+  // console.log({ parsedIDs: parsedGameState.taggedPlayers });
 
   obsticles = parsedGameState.obsticles.map((obst) => new Obsticle(obst));
 
@@ -160,46 +159,3 @@ function handleExitPlayer(id) {
 function handleUnload() {
   return socket.emit("exit", playerID);
 }
-
-// ****************************************** iOS ***************************************************************
-function removeBanner() {
-  var element = document.getElementById("motion-permission");
-  if (element) {
-    element.parentNode.removeChild(element);
-  }
-}
-
-function ClickRequestDeviceMotionEvent() {
-  window.DeviceMotionEvent.requestPermission()
-    .then((response) => {
-      if (response === "granted") {
-        removeBanner();
-        addMotionListener();
-      } else {
-        console.log("DeviceMotion permissions not granted.");
-      }
-    })
-    .catch((e) => {
-      console.error(e);
-    });
-}
-
-window.onload = function () {
-  window.addEventListener("beforeunload", handleUnload);
-
-  // * Check if is IOS 13 when page loads.
-  if (
-    window.DeviceMotionEvent &&
-    typeof window.DeviceMotionEvent.requestPermission === "function"
-  ) {
-    // * Everything here is just a lazy banner. You can do the banner your way.
-    const banner = document.createElement("div");
-    banner.setAttribute("id", "motion-permission");
-    banner.innerHTML = `<div style="z-index: 1; position: absolute; width: 100%; background-color:#000; color: #fff"><p style="padding: 10px">Click here to enable DeviceMotion</p></div>`;
-    banner.onclick = ClickRequestDeviceMotionEvent; // * You NEED to bind the function into a onClick event. An artificial 'onClick' will NOT work.
-    document.querySelector("body").appendChild(banner);
-  } else {
-    addMotionListener();
-  }
-};
-// ****************************************** iOS END ***************************************************************

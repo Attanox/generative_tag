@@ -17,8 +17,6 @@ class Agent {
 
     this.imune = 0;
 
-    this.hasVessel = false;
-
     this.obsticles = obsticles;
   }
 
@@ -30,8 +28,8 @@ class Agent {
     this.pos = createVector(pos.x, pos.y);
   }
 
-  getColor(taggedPlayerID) {
-    if (taggedPlayerID === this.id) {
+  getColor(taggedPlayersID) {
+    if (taggedPlayersID.includes(this.id)) {
       return color(Agent.taggedColor);
     } else {
       return color(Agent.notTaggedColor);
@@ -51,7 +49,7 @@ class Agent {
     return { x: p5v.x, y: p5v.y };
   }
 
-  collide(other, taggedPlayerID) {
+  collide(other, taggedPlayersID) {
     let otherPosition = createVector(other.pos.x, other.pos.y);
 
     // find out if two agents are close
@@ -66,19 +64,19 @@ class Agent {
       // other.pos.add(movement);
 
       // * tagging part
-      if (this.id === taggedPlayerID) {
+      if (taggedPlayersID.includes(this.id)) {
         this.pos.x = this.pos.x - this.radius;
         this.pos.y = this.pos.y - this.radius;
         return other.id;
       }
 
-      if (other.id === taggedPlayerID) {
+      if (taggedPlayersID.includes(other.id)) {
         return this.id;
       }
     }
   }
 
-  possesion(vessel) {
+  possesion(vessel, taggedPlayersID) {
     let otherPosition = createVector(vessel.pos.x, vessel.pos.y);
 
     // find out if two agents are close
@@ -87,11 +85,13 @@ class Agent {
 
     // if agents are too close
     if (dist < 0) {
-      // send them opposite ways
-      let movement = relative.copy().setMag(abs(dist / 2));
-      this.pos = vessel.pos;
-      // vessel.pos.add(movement);
-
+      if (!taggedPlayersID.includes(this.id)) {
+        // send them opposite ways
+        let movement = relative.copy().setMag(abs(dist / 2));
+        this.pos.sub(movement);
+        // vessel.pos.add(movement);
+        return "";
+      }
       return vessel.id;
     }
 
@@ -256,8 +256,8 @@ class Agent {
     });
   }
 
-  render(taggedPlayerID) {
-    const color = this.getColor(taggedPlayerID);
+  render(taggedPlayersID) {
+    const color = this.getColor(taggedPlayersID);
     fill(color);
 
     // * stroke so we know which one is ours
@@ -270,14 +270,14 @@ class Agent {
 
   static configRender(
     { id, pos, radius, vel },
-    taggedPlayerID,
+    taggedPlayersID,
     isVessel = false
   ) {
     let fillColor;
 
     if (isVessel) {
       fillColor = color("rgba(255, 255, 255, 0)");
-    } else if (taggedPlayerID === id) {
+    } else if (taggedPlayersID.includes(id)) {
       fillColor = color(Agent.taggedColor);
     } else {
       fillColor = color(Agent.notTaggedColor);
