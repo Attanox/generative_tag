@@ -1,6 +1,6 @@
-# Generative Tag
+# Ghost hunters
 
-Game you played as a kid... but on your phone
+You are stranded soul seeking body to survive, but there is not enough bodies, and keeping body is not an easy task with other souls looking to do the same. Unfortunately, that is not your only problem. With no body, hunters will be hunting you.
 
 ## Used technologies
 
