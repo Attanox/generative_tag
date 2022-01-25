@@ -22,6 +22,15 @@ socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
 socket.on("gameState", handleGameState);
 
+let HUNTERS_NUM = 5;
+let hunters = [];
+let ghost;
+let ghostImg;
+
+function preload() {
+  ghostImg = loadImage("assets/ghost-solid.png");
+}
+
 function setup() {
   // * set canvas size
   createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -32,6 +41,12 @@ function setup() {
     player: { ...getAddAgentPayload() },
     obsticles: createObsticles(),
   });
+
+  for (i = 0; i < HUNTERS_NUM; i++) {
+    hunters.push(getAgent({ id: `hunter-${i}`, ...getAddAgentPayload() }));
+  }
+
+  // ghost = createSprite(RADIUS, RADIUS);
 
   // * initial device motion coords
   x = 0;
@@ -50,6 +65,8 @@ function draw() {
   text("y: " + y, 25, 50);
 
   obsticles.forEach((o) => o.render());
+
+  renderHunters();
 
   let agentsMvmt = {};
 
@@ -93,6 +110,36 @@ function draw() {
     });
   }
   socket.emit("updateMvmt", agentsMvmt);
+
+  drawSprites();
+}
+
+function renderHunters() {
+  for (let i = 0; i < hunters.length; i++) {
+    for (let j = 0; j < i; j++) {
+      hunters[i].huntersCollided(hunters[j]);
+    }
+    if (hunters[i].huntersCollided(player)) {
+      // TODO: handle remove
+      // player = null;
+      // handleUnload();
+      const createdOne = document.getElementById("replay");
+      const banner = createdOne ? createdOne : document.createElement("div");
+      banner.setAttribute("id", "replay");
+      banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align="center"><p style="padding: 10px"><h1>Game over!</h1></ br></ br>Click here to start over</p></div>`;
+      banner.onclick = () => console.log("👋🌎");
+      if (!createdOne) document.querySelector("body").appendChild(banner);
+    }
+  }
+
+  for (let i = 0; i < hunters.length; i++) {
+    if (player && taggedPlayers.includes(player.id)) {
+      hunters[i].hunt(player);
+    }
+
+    hunters[i].move();
+    hunters[i].render(taggedPlayers);
+  }
 }
 
 function createObsticles() {

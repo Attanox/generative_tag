@@ -49,7 +49,7 @@ class Agent {
     return { x: p5v.x, y: p5v.y };
   }
 
-  collide(other, taggedPlayersID) {
+  collide(other, taggedPlayersID = []) {
     let otherPosition = createVector(other.pos.x, other.pos.y);
 
     // find out if two agents are close
@@ -81,6 +81,27 @@ class Agent {
         return { tag: this.id, untag: other.id };
       }
     }
+  }
+
+  huntersCollided(other) {
+    if (!other) return;
+    let otherPosition = createVector(other.pos.x, other.pos.y);
+
+    // find out if two agents are close
+    let relative = p5.Vector.sub(otherPosition, this.pos);
+    let dist = relative.mag() - (this.radius + other.radius);
+
+    // if agents are too close
+    if (dist < 0) {
+      // send them opposite ways
+      let movement = relative.copy().setMag(abs(dist / 2));
+      this.pos.sub(movement);
+      // other.pos.add(movement);
+
+      return true;
+    }
+
+    return false;
   }
 
   possesion(vessel, taggedPlayersID) {
@@ -157,23 +178,6 @@ class Agent {
   }
 
   // taken from https://www.youtube.com/watch?v=4hA7G3gup-4&list=PLLHSiGX_Xw7GPGdb5GZZGYlQsYPg71N3n
-  flee(taggedAgent) {
-    let desired = p5.Vector.sub(taggedAgent.pos, this.pos);
-    let d = desired.mag();
-    if (d < 150) {
-      desired.setMag(Agent.maxSpeed * 2);
-      desired.mult(-1);
-      let steer = p5.Vector.sub(desired, this.vel);
-      steer.limit(Agent.maxForce * 2);
-      this.vel = steer;
-    } else {
-      this.vel = p5.Vector.random2D().mult(random(10)); // createVector(0, 0);
-    }
-
-    this.checkBoundaries();
-  }
-
-  // taken from https://www.youtube.com/watch?v=4hA7G3gup-4&list=PLLHSiGX_Xw7GPGdb5GZZGYlQsYPg71N3n
   arrive(target) {
     let desired = p5.Vector.sub(target, this.pos);
     let d = desired.mag();
@@ -188,31 +192,7 @@ class Agent {
   }
 
   hunt(hunted) {
-    // * looking for the closest agent
-    let closestTarget;
-    hunted.forEach((h) => {
-      if (closestTarget) {
-        let d = dist(this.pos.x, this.pos.y, h.pos.x, h.pos.y);
-        let closestDist = dist(
-          this.pos.x,
-          this.pos.y,
-          closestTarget.x,
-          closestTarget.y
-        );
-        if (d < closestDist && !h.isImune()) {
-          closestTarget = h.pos;
-        }
-      } else {
-        // * first iteration does not have anything
-        if (!h.isImune()) {
-          closestTarget = h.pos;
-        }
-      }
-    });
-
-    if (closestTarget) {
-      this.arrive(closestTarget);
-    }
+    this.arrive(hunted.pos);
   }
 
   // taken from https://stackoverflow.com/questions/55419162/corner-collision-angles-in-p5-js
