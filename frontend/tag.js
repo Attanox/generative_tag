@@ -1,5 +1,5 @@
-const socket = io.connect("http://localhost:3000/");
-// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+// const socket = io.connect("http://localhost:3000/");
+const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
@@ -22,9 +22,9 @@ socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
 socket.on("gameState", handleGameState);
 
-let HUNTERS_NUM = 5;
+let HUNTERS_NUM = 1;
 let hunters = [];
-let ghost;
+let ghosts = [];
 let ghostImg;
 
 function preload() {
@@ -43,7 +43,9 @@ function setup() {
   });
 
   for (i = 0; i < HUNTERS_NUM; i++) {
-    hunters.push(getAgent({ id: `hunter-${i}`, ...getAddAgentPayload() }));
+    const config = getAddAgentPayload();
+    hunters.push(getAgent({ id: `hunter-${i}`, ...config }));
+    ghosts.push(createGhost(config.pos.x, config.pos.y));
   }
 
   // ghost = createSprite(RADIUS, RADIUS);
@@ -68,50 +70,56 @@ function draw() {
 
   renderHunters();
 
-  let agentsMvmt = {};
-
-  let newTaggedPlayer;
-  let untaggedPlayer;
-  agentData.forEach((agentConfig) => {
-    // * we render current player separately below
-    if (agentConfig.id !== playerID) {
-      Agent.configRender(agentConfig, taggedPlayers);
-      const collided = player.collide(agentConfig, taggedPlayers);
-      if (collided) {
-        newTaggedPlayer = collided.tag;
-        untaggedPlayer = collided.untag;
-      }
-    }
-  });
-
-  let removeVessel;
-  vessels.forEach((vesselConfig) => {
-    // * we render current player separately below
-    Agent.configRender(vesselConfig, taggedPlayers, true);
-    removeVessel = player.possesion(vesselConfig, taggedPlayers);
-  });
-
   if (player) {
+    let agentsMvmt = {};
+
+    let newTaggedPlayer;
+    let untaggedPlayer;
+    agentData.forEach((agentConfig) => {
+      // * we render current player separately below
+      if (agentConfig.id !== playerID) {
+        Agent.configRender(agentConfig, taggedPlayers);
+        const collided = player.collide(agentConfig, taggedPlayers);
+        if (collided) {
+          newTaggedPlayer = collided.tag;
+          untaggedPlayer = collided.untag;
+        }
+      }
+    });
+
+    let removeVessel;
+    vessels.forEach((vesselConfig) => {
+      // * we render current player separately below
+      Agent.configRender(vesselConfig, taggedPlayers, true);
+      removeVessel = player.possesion(vesselConfig, taggedPlayers);
+    });
+
     deviceMoved();
     player.resolveRectCircleCollision(obsticles);
     agentsMvmt[playerID] = player.move();
     player.render(taggedPlayers);
-  }
 
-  if (newTaggedPlayer)
-    socket.emit("updateTagged", {
-      tag: newTaggedPlayer,
-      untag: untaggedPlayer,
-    });
-  if (removeVessel) {
-    socket.emit("removeVessel", {
-      vesselID: removeVessel,
-      playerID: player.id,
-    });
+    if (newTaggedPlayer)
+      socket.emit("updateTagged", {
+        tag: newTaggedPlayer,
+        untag: untaggedPlayer,
+      });
+    if (removeVessel) {
+      socket.emit("removeVessel", {
+        vesselID: removeVessel,
+        playerID: player.id,
+      });
+    }
+    socket.emit("updateMvmt", agentsMvmt);
   }
-  socket.emit("updateMvmt", agentsMvmt);
 
   drawSprites();
+}
+
+function createGhost(x, y) {
+  const a = createSprite(x, y);
+  a.addImage(ghostImg);
+  return a;
 }
 
 function renderHunters() {
@@ -120,14 +128,13 @@ function renderHunters() {
       hunters[i].huntersCollided(hunters[j]);
     }
     if (hunters[i].huntersCollided(player)) {
-      // TODO: handle remove
-      // player = null;
-      // handleUnload();
+      player = null;
+      handleUnload();
       const createdOne = document.getElementById("replay");
       const banner = createdOne ? createdOne : document.createElement("div");
       banner.setAttribute("id", "replay");
-      banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align="center"><p style="padding: 10px"><h1>Game over!</h1></ br></ br>Click here to start over</p></div>`;
-      banner.onclick = () => console.log("👋🌎");
+      banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align: center><p style="padding: 10px"><h1>Game over!</h1></ br></ br>Click here to start over</p></div>`;
+      banner.onclick = () => window.location.reload();
       if (!createdOne) document.querySelector("body").appendChild(banner);
     }
   }
@@ -138,7 +145,9 @@ function renderHunters() {
     }
 
     hunters[i].move();
-    hunters[i].render(taggedPlayers);
+    // hunters[i].render(taggedPlayers);
+    ghosts[i].position.x = hunters[i].pos.x;
+    ghosts[i].position.y = hunters[i].pos.y;
   }
 }
 
