@@ -2,7 +2,7 @@ class Agent {
   static taggedColor = `rgb(255, 100, 100)`;
   static notTaggedColor = `rgb(100, 255, 100)`;
 
-  static maxSpeed = 100;
+  static maxSpeed = 5;
   static maxForce = 5;
 
   static imuneAmount = 300;
@@ -45,6 +45,12 @@ class Agent {
 
   static getStartingVelocity() {
     const p5v = p5.Vector.random2D().mult(random(10));
+
+    return { x: p5v.x, y: p5v.y };
+  }
+
+  static getHunterVelocity() {
+    const p5v = p5.Vector.random2D().mult(0.5);
 
     return { x: p5v.x, y: p5v.y };
   }

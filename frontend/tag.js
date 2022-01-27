@@ -18,11 +18,13 @@ let taggedPlayers = [];
 
 let vessels = [];
 
+let playable = false;
+
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
 socket.on("gameState", handleGameState);
 
-let HUNTERS_NUM = 1;
+let HUNTERS_NUM = 3;
 let hunters = [];
 let ghosts = [];
 let ghostImg;
@@ -44,7 +46,9 @@ function setup() {
 
   for (i = 0; i < HUNTERS_NUM; i++) {
     const config = getAddAgentPayload();
-    hunters.push(getAgent({ id: `hunter-${i}`, ...config }));
+    hunters.push(
+      getAgent({ id: `hunter-${i}`, ...config, vel: Agent.getHunterVelocity() })
+    );
     ghosts.push(createGhost(config.pos.x, config.pos.y));
   }
 
@@ -65,6 +69,8 @@ function draw() {
   fill(255);
   text("x: " + x, 25, 25);
   text("y: " + y, 25, 50);
+
+  if (!playable) return;
 
   obsticles.forEach((o) => o.render());
 
@@ -127,7 +133,12 @@ function renderHunters() {
     for (let j = 0; j < i; j++) {
       hunters[i].huntersCollided(hunters[j]);
     }
-    if (hunters[i].huntersCollided(player)) {
+    hunters[i].resolveRectCircleCollision(obsticles);
+    if (
+      player &&
+      taggedPlayers.includes(player.id) &&
+      hunters[i].huntersCollided(player)
+    ) {
       player = null;
       handleUnload();
       const createdOne = document.getElementById("replay");
@@ -212,6 +223,12 @@ function addMotionListener() {
     x = parseInt(e.accelerationIncludingGravity.x);
     y = parseInt(e.accelerationIncludingGravity.y);
   });
+
+  setGameAsPlayable();
+}
+
+function setGameAsPlayable() {
+  playable = true;
 }
 
 function handleExitPlayer(id) {
