@@ -2,7 +2,7 @@ class Agent {
   static taggedColor = `rgb(255, 100, 100)`;
   static notTaggedColor = `rgb(100, 255, 100)`;
 
-  static maxSpeed = 5;
+  static maxSpeed = 3;
   static maxForce = 5;
 
   static imuneAmount = 300;
@@ -138,7 +138,7 @@ class Agent {
 
   move() {
     // moving means adding velocity to position
-    this.pos.add(this.vel);
+    this.pos.add(this.vel.limit(2));
 
     this.checkBoundaries();
 
@@ -177,7 +177,7 @@ class Agent {
   }
 
   changePosition(x, y) {
-    this.pos.x = this.pos.x + x;
+    this.pos.x = this.pos.x + Math.min(x);
     this.pos.y = this.pos.y - y;
 
     this.checkBoundaries();

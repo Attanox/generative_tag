@@ -1,11 +1,11 @@
-const socket = io.connect("http://localhost:3000/");
-// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+// const socket = io.connect("http://localhost:3000/");
+const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
 const CANVAS_HEIGHT = 500;
 const OBSTICLES_NUM = 5;
-const HUNTERS_NUM = 0;
+const HUNTERS_NUM = 1;
 
 let x, y;
 
