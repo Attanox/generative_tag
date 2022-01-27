@@ -1,33 +1,32 @@
-// const socket = io.connect("http://localhost:3000/");
-const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+const socket = io.connect("http://localhost:3000/");
+// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
 const CANVAS_HEIGHT = 500;
 const OBSTICLES_NUM = 5;
+const HUNTERS_NUM = 0;
 
 let x, y;
 
 let agents = [];
 let obsticles = [];
 let playerID = "";
+let player;
 
 let agentData = [];
-let player;
 let taggedPlayers = [];
 
 let vessels = [];
-
 let playable = false;
+
+let hunters = [];
+let ghosts = [];
+let ghostImg;
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
 socket.on("gameState", handleGameState);
-
-let HUNTERS_NUM = 3;
-let hunters = [];
-let ghosts = [];
-let ghostImg;
 
 function preload() {
   ghostImg = loadImage("assets/ghost-solid.png");

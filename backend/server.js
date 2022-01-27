@@ -25,6 +25,12 @@ io.on("connection", (client) => {
     delete state[roomName].agents[id];
 
     io.sockets.in(roomName).emit("playerExit", id);
+
+    if (agentsLength() === 1) {
+      const agentKeys = Object.keys(state[roomName].agents);
+      const lastOne = agentKeys[0];
+      state[roomName].taggedPlayers = [lastOne];
+    }
   }
 
   function handleUpdateMvmt(data) {
@@ -66,7 +72,7 @@ io.on("connection", (client) => {
 
     addAgent(id, playerProps);
 
-    if (someAgents() && state[roomName].vessels.length + 2 < agentsLength()) {
+    if (someAgents() && agentsLength() > 1) {
       addVessel(player.oppositePos, player.vel, player.radius);
 
       // addVessel(
