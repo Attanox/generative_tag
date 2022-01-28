@@ -73,8 +73,7 @@ io.on("connection", (client) => {
     addAgent(id, playerProps);
 
     if (someAgents() && agentsLength() > 1) {
-      addVessel(player.oppositePos, player.vel, player.radius);
-
+      // addVessel(player.oppositePos, player.vel, player.radius);
       // addVessel(
       //   { ...player.oppositePos, y: player.oppositePos.y + 50 },
       //   player.vel,
@@ -114,6 +113,7 @@ io.on("connection", (client) => {
 
   function addVessel(pos, vel, radius) {
     const id = uuidv4();
+    console.log("adding");
     state[roomName] = {
       ...state[roomName],
       vessels: [...state[roomName].vessels, { id, pos, vel, radius }],

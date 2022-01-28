@@ -1,11 +1,10 @@
-// const socket = io.connect("http://localhost:3000/");
-const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+const socket = io.connect("http://localhost:3000/");
+// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
 const CANVAS_HEIGHT = 500;
 const OBSTICLES_NUM = 5;
-const HUNTERS_NUM = 1;
 
 let x, y;
 
@@ -23,6 +22,8 @@ let playable = false;
 let hunters = [];
 let ghosts = [];
 let ghostImg;
+
+let timer;
 
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
@@ -43,15 +44,15 @@ function setup() {
     obsticles: createObsticles(),
   });
 
-  for (i = 0; i < HUNTERS_NUM; i++) {
-    const config = getAddAgentPayload();
-    hunters.push(
-      getAgent({ id: `hunter-${i}`, ...config, vel: Agent.getHunterVelocity() })
-    );
-    ghosts.push(createGhost(config.pos.x, config.pos.y));
-  }
+  createGhost();
 
-  // ghost = createSprite(RADIUS, RADIUS);
+  // * TIMER
+  timer = createElement("h1", " 00 : 00 ");
+  timer.style("color", "#fff");
+  timer.style("width", "100%");
+  timer.style("text-align", "center");
+  timer.class("timer");
+  timer.position(0, CANVAS_HEIGHT);
 
   // * initial device motion coords
   x = 0;
@@ -121,10 +122,20 @@ function draw() {
   drawSprites();
 }
 
-function createGhost(x, y) {
-  const a = createSprite(x, y);
-  a.addImage(ghostImg);
-  return a;
+function createGhost() {
+  const config = getAddAgentPayload();
+
+  hunters.push(
+    getAgent({
+      id: `hunter-${Date.now()}`,
+      ...config,
+      vel: Agent.getHunterVelocity(),
+    })
+  );
+
+  const sprite = createSprite(config.pos.x, config.pos.y);
+  sprite.addImage(ghostImg);
+  ghosts.push(sprite);
 }
 
 function renderHunters() {
@@ -133,20 +144,20 @@ function renderHunters() {
       hunters[i].huntersCollided(hunters[j]);
     }
     hunters[i].resolveRectCircleCollision(obsticles);
-    if (
-      player &&
-      taggedPlayers.includes(player.id) &&
-      hunters[i].huntersCollided(player)
-    ) {
-      player = null;
-      handleUnload();
-      const createdOne = document.getElementById("replay");
-      const banner = createdOne ? createdOne : document.createElement("div");
-      banner.setAttribute("id", "replay");
-      banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align: center><p style="padding: 10px"><h1>Game over!</h1></ br></ br>Click here to start over</p></div>`;
-      banner.onclick = () => window.location.reload();
-      if (!createdOne) document.querySelector("body").appendChild(banner);
-    }
+    // if (
+    //   player &&
+    //   taggedPlayers.includes(player.id) &&
+    //   hunters[i].huntersCollided(player)
+    // ) {
+    //   player = null;
+    //   handleUnload();
+    //   const createdOne = document.getElementById("replay");
+    //   const banner = createdOne ? createdOne : document.createElement("div");
+    //   banner.setAttribute("id", "replay");
+    //   banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align: center><p style="padding: 10px"><h1>You survived: ${timer.elt.innerText}</h1></ br></ br>Click here to start over</p></div>`;
+    //   banner.onclick = () => window.location.reload();
+    //   if (!createdOne) document.querySelector("body").appendChild(banner);
+    // }
   }
 
   for (let i = 0; i < hunters.length; i++) {
@@ -228,6 +239,7 @@ function addMotionListener() {
 
 function setGameAsPlayable() {
   playable = true;
+  startTimer();
 }
 
 function handleExitPlayer(id) {
@@ -237,5 +249,6 @@ function handleExitPlayer(id) {
 }
 
 function handleUnload() {
+  pauseTimer();
   return socket.emit("exit", playerID);
 }
