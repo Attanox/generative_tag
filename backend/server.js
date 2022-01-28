@@ -113,7 +113,6 @@ io.on("connection", (client) => {
 
   function addVessel(pos, vel, radius) {
     const id = uuidv4();
-    console.log("adding");
     state[roomName] = {
       ...state[roomName],
       vessels: [...state[roomName].vessels, { id, pos, vel, radius }],
