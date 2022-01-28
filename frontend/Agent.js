@@ -279,7 +279,8 @@ class Agent {
     fill(fillColor);
 
     if (isVessel) stroke(255);
-    ellipse(pos.x, pos.y, radius * 2);
+    const r = p5.Vector.random2D();
+    ellipse(pos.x + r.x, pos.y + r.y, radius * 2);
     noStroke();
   }
 }
