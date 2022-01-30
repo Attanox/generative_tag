@@ -1,10 +1,9 @@
-const socket = io.connect("http://localhost:3000/");
-// const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
+// const socket = io.connect("http://localhost:3000/");
+const socket = io.connect("https://calm-plateau-75658.herokuapp.com/");
 
 const RADIUS = 15;
 const CANVAS_WIDTH = 320;
 const CANVAS_HEIGHT = 500;
-const OBSTICLES_NUM = 5;
 
 let x, y;
 
@@ -41,7 +40,10 @@ function setup() {
   socket.emit("joinGame", {
     roomName: null,
     player: { ...getAddAgentPayload() },
-    obsticles: createObsticles(),
+    dimensions: {
+      width,
+      height,
+    },
   });
 
   createGhost();
@@ -144,20 +146,20 @@ function renderHunters() {
       hunters[i].huntersCollided(hunters[j]);
     }
     hunters[i].resolveRectCircleCollision(obsticles);
-    // if (
-    //   player &&
-    //   taggedPlayers.includes(player.id) &&
-    //   hunters[i].huntersCollided(player)
-    // ) {
-    //   player = null;
-    //   handleUnload();
-    //   const createdOne = document.getElementById("replay");
-    //   const banner = createdOne ? createdOne : document.createElement("div");
-    //   banner.setAttribute("id", "replay");
-    //   banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align: center><p style="padding: 10px"><h1>You survived: ${timer.elt.innerText}</h1></ br></ br>Click here to start over</p></div>`;
-    //   banner.onclick = () => window.location.reload();
-    //   if (!createdOne) document.querySelector("body").appendChild(banner);
-    // }
+    if (
+      player &&
+      taggedPlayers.includes(player.id) &&
+      hunters[i].huntersCollided(player)
+    ) {
+      player = null;
+      handleUnload();
+      const createdOne = document.getElementById("replay");
+      const banner = createdOne ? createdOne : document.createElement("div");
+      banner.setAttribute("id", "replay");
+      banner.innerHTML = `<div style="z-index: 99; position: absolute; top: 0; left: 0; width: 100%; background-color:#8f273a; color: #fff"; text-align: center><p style="padding: 10px"><h1>You survived: ${timer.elt.innerText}</h1></ br></ br>Click here to start over</p></div>`;
+      banner.onclick = () => window.location.reload();
+      if (!createdOne) document.querySelector("body").appendChild(banner);
+    }
   }
 
   for (let i = 0; i < hunters.length; i++) {
@@ -170,10 +172,6 @@ function renderHunters() {
     ghosts[i].position.x = hunters[i].pos.x;
     ghosts[i].position.y = hunters[i].pos.y;
   }
-}
-
-function createObsticles() {
-  return [...Array(OBSTICLES_NUM)].map(() => Obsticle.getProperties());
 }
 
 function getAddAgentPayload() {

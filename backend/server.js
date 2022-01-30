@@ -1,5 +1,9 @@
 const { initGame } = require("./game");
-const { FRAME_RATE } = require("./constants");
+const {
+  FRAME_RATE,
+  OBSTICLES_NUM,
+  REFRESH_OBSTICLES_DEFAULT,
+} = require("./constants");
 
 const { v4: uuidv4 } = require("uuid");
 const io = require("socket.io")();
@@ -10,6 +14,8 @@ const clientRoomMap = {};
 // TODO: possibility for multiple rooms...
 const roomName = "cool_room_name";
 state[roomName] = initGame();
+
+let refreshObsticlesCounter = 0;
 
 // * listen for client connecting to socket
 io.on("connection", (client) => {
@@ -53,7 +59,7 @@ io.on("connection", (client) => {
     );
   }
 
-  function handleJoinGame({ roomName: room, player, obsticles }) {
+  function handleJoinGame({ roomName: room, player, dimensions }) {
     const id = uuidv4();
 
     clientRoomMap[id] = roomName;
@@ -68,12 +74,13 @@ io.on("connection", (client) => {
 
     setTaggedPlayers(id);
 
-    addObsticles(obsticles);
-
     addAgent(id, playerProps);
 
+    saveDimensions(dimensions);
+
+    // TODO: better condition
     if (someAgents() && agentsLength() > 1) {
-      // addVessel(player.oppositePos, player.vel, player.radius);
+      addVessel(player.oppositePos, player.vel, player.radius);
       // addVessel(
       //   { ...player.oppositePos, y: player.oppositePos.y + 50 },
       //   player.vel,
@@ -94,12 +101,8 @@ io.on("connection", (client) => {
     client.emit("displayPlayer", playerProps);
   }
 
-  function addObsticles(obsticles) {
-    if (someAgents()) return;
-    state[roomName] = {
-      ...state[roomName],
-      obsticles,
-    };
+  function saveDimensions(dimensions) {
+    state[roomName].dimensions = dimensions;
   }
 
   function agentsLength() {
@@ -164,7 +167,28 @@ io.on("connection", (client) => {
   }, 1000 / FRAME_RATE);
 });
 
+function getProperties({ width, height }) {
+  const x = Math.random() * (width - 50);
+  const y = Math.random() * (height - 50);
+
+  const w = 10 * (Math.floor(Math.random() * 5) + 1);
+  const h = 10 * (Math.floor(Math.random() * 5) + 1);
+  return { x, y, w, h };
+}
+
+function createObsticles(dimensions) {
+  return [...Array(OBSTICLES_NUM)].map(() => getProperties(dimensions));
+}
+
 function emitGameState(room, gameState) {
+  if (gameState.dimensions.width && gameState.dimensions.height) {
+    refreshObsticlesCounter--;
+    if (refreshObsticlesCounter <= 0) {
+      gameState.obsticles = createObsticles(gameState.dimensions);
+      refreshObsticlesCounter = REFRESH_OBSTICLES_DEFAULT;
+    }
+  }
+
   // Send this event to everyone in the room.
   io.sockets.in(room).emit("gameState", JSON.stringify(gameState));
 }

@@ -7,15 +7,6 @@ class Obsticle {
     this.pos = [x, y, w, h];
   }
 
-  static getProperties() {
-    const x = random(width - 50);
-    const y = random(height - 50);
-
-    const w = 10 * (Math.floor(random(5)) + 1);
-    const h = 10 * (Math.floor(random(5)) + 1);
-    return { x, y, w, h };
-  }
-
   render() {
     fill(255);
 

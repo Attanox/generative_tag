@@ -13,5 +13,6 @@ function createGameState() {
     agents: {},
     obsticles: [],
     vessels: [],
+    dimensions: { width: 0, height: 0 },
   };
 }
