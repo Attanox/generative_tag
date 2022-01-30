@@ -20,7 +20,7 @@ const clearTimer = () => {
 function updateTimer() {
   seconds++;
 
-  if (seconds % 5 === 0) createGhost();
+  if (seconds % 30 === 0) createGhost();
 
   if (seconds === 60) {
     seconds = 0;

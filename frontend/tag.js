@@ -24,6 +24,9 @@ let ghostImg;
 
 let timer;
 
+let scrCnt = 0;
+let canvas;
+
 socket.on("displayPlayer", handleDisplayPlayer);
 socket.on("playerExit", handleExitPlayer);
 socket.on("gameState", handleGameState);
@@ -34,7 +37,7 @@ function preload() {
 
 function setup() {
   // * set canvas size
-  createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+  canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // TODO: add roomName ?
   socket.emit("joinGame", {
@@ -249,4 +252,10 @@ function handleExitPlayer(id) {
 function handleUnload() {
   pauseTimer();
   return socket.emit("exit", playerID);
+}
+
+function keyPressed() {
+  if (key === "s" || key === "S") {
+    saveCanvas(canvas, "AndrejTlcina_FinalProject_" + scrCnt++, "png");
+  }
 }

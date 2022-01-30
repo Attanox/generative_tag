@@ -28,7 +28,12 @@ io.on("connection", (client) => {
   client.on("removeVessel", handleRemoveVessel);
 
   function handleExit(id) {
-    delete state[roomName].agents[id];
+    const newAgents = delete state[roomName].agents[id];
+    state[roomName].agents = { ...newAgents };
+
+    state[roomName].taggedPlayers = state[roomName].taggedPlayers.filter(
+      (el) => el !== id
+    );
 
     io.sockets.in(roomName).emit("playerExit", id);
 
@@ -78,24 +83,17 @@ io.on("connection", (client) => {
 
     saveDimensions(dimensions);
 
+    const gameState = state[roomName];
+    const vessels = gameState.vessels;
+    const taggedPlayers = gameState.taggedPlayers;
+
     // TODO: better condition
-    if (someAgents() && agentsLength() > 1) {
+    if (
+      someAgents() &&
+      agentsLength() > 1 &&
+      vessels.length + taggedPlayers.length <= agentsLength()
+    ) {
       addVessel(player.oppositePos, player.vel, player.radius);
-      // addVessel(
-      //   { ...player.oppositePos, y: player.oppositePos.y + 50 },
-      //   player.vel,
-      //   player.radius
-      // );
-      // addVessel(
-      //   { ...player.oppositePos, y: player.oppositePos.y - 50 },
-      //   player.vel,
-      //   player.radius
-      // );
-      // addVessel(
-      //   { ...player.oppositePos, x: player.oppositePos.x + 50 },
-      //   player.vel,
-      //   player.radius
-      // );
     }
 
     client.emit("displayPlayer", playerProps);
@@ -145,17 +143,19 @@ io.on("connection", (client) => {
   }
 
   function updateAgent(id, pos, vel) {
-    state[roomName] = {
-      ...state[roomName],
-      agents: {
-        ...state[roomName].agents,
-        [id]: {
-          ...state[roomName].agents[id],
-          pos,
-          vel,
+    if (state[roomName].agents[id]) {
+      state[roomName] = {
+        ...state[roomName],
+        agents: {
+          ...state[roomName].agents,
+          [id]: {
+            ...state[roomName].agents[id],
+            pos,
+            vel,
+          },
         },
-      },
-    };
+      };
+    }
   }
 
   function handleMovePlayer({ id, pos, vel }) {
