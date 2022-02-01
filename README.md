@@ -25,7 +25,9 @@ npx live-server
 ```
 cd /backend
 
+yarn or npm i
+
 npx nodemon server.js
 ```
 
-Project is hosted [here](`https://competent-kilby-50050d.netlify.app/`).
+Project is hosted [here](https://competent-kilby-50050d.netlify.app/).
