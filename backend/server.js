@@ -28,8 +28,8 @@ io.on("connection", (client) => {
   client.on("removeVessel", handleRemoveVessel);
 
   function handleExit(id) {
-    const newAgents = delete state[roomName].agents[id];
-    state[roomName].agents = { ...newAgents };
+    delete state[roomName].agents[id];
+    state[roomName].agents = { ...state[roomName].agents };
 
     state[roomName].taggedPlayers = state[roomName].taggedPlayers.filter(
       (el) => el !== id
@@ -37,7 +37,7 @@ io.on("connection", (client) => {
 
     io.sockets.in(roomName).emit("playerExit", id);
 
-    if (agentsLength() === 1) {
+    if (state[roomName].taggedPlayers.length === 0 && someAgents()) {
       const agentKeys = Object.keys(state[roomName].agents);
       const lastOne = agentKeys[0];
       state[roomName].taggedPlayers = [lastOne];
@@ -87,7 +87,6 @@ io.on("connection", (client) => {
     const vessels = gameState.vessels;
     const taggedPlayers = gameState.taggedPlayers;
 
-    // TODO: better condition
     if (
       someAgents() &&
       agentsLength() > 1 &&

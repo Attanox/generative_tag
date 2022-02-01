@@ -246,7 +246,7 @@ function setGameAsPlayable() {
 function handleExitPlayer(id) {
   const exitedPlayerID = agents.findIndex((a) => a.id === id);
 
-  agents.splice(exitedPlayerID, 1);
+  if (exitedPlayerID !== -1) agents.splice(exitedPlayerID, 1);
 }
 
 function handleUnload() {
